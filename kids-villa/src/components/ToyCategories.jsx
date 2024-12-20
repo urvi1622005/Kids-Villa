@@ -27,7 +27,7 @@ const ToyCategories = () => {
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
 
   const toys = [
-    { id: 1, name: "Space Explorer", image: "https://i.imgur.com/XqDif6O.jpg", price: 19.99, category: "Action Figures" },
+    { id: 1, name: "Space Explorer", image: "../src/assets/copa.webp", price: 19.99, category: "Action Figures" },
     { id: 2, name: "Cuddly Bear", image: "https://i.imgur.com/vIVQZ6R.jpg", price: 24.99, category: "Dolls" },
     { id: 3, name: "Wooden Train", image: "https://i.imgur.com/bdx4XtH.jpg", price: 34.99, category: "Building Blocks" },
     { id: 4, name: "Rainbow Xylophone", image: "https://i.imgur.com/qCEBqLL.jpg", price: 29.99, category: "Educational" },

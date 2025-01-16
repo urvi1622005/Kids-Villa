@@ -27,14 +27,14 @@ const ToyCategories = () => {
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
 
   const toys = [
-    { id: 1, name: "Space Explorer", image: "../src/assets/copa.webp", price: 19.99, category: "Action Figures" },
-    { id: 2, name: "Cuddly Bear", image: "../src/assets/copa.webp", price: 24.99, category: "Dolls" },
-    { id: 3, name: "Wooden Train", image: "../src/assets/copa.webp", price: 34.99, category: "Building Blocks" },
-    { id: 4, name: "Rainbow Xylophone", image: "../src/assets/copa.webp", price: 29.99, category: "Educational" },
-    { id: 5, name: "Superhero Squad", image: "https://i.imgur.com/XqDif6O.jpg", price: 39.99, category: "Action Figures" },
-    { id: 6, name: "Puzzle Master", image: "https://i.imgur.com/vIVQZ6R.jpg", price: 14.99, category: "Board Games" },
-    { id: 7, name: "Mega Blocks Set", image: "https://i.imgur.com/bdx4XtH.jpg", price: 49.99, category: "Building Blocks" },
-    { id: 8, name: "Soccer Ball", image: "https://i.imgur.com/qCEBqLL.jpg", price: 19.99, category: "Outdoor" },
+    { id: 1, name: "Space Explorer", image: "../src/assets/stunt.jpeg", price: 600, category: "Action Figures" },
+    { id: 2, name: "Cuddly Bear", image: "../src/assets/babyDoll.jpeg", price: 400, category: "Dolls" },
+    { id: 3, name: "Wooden Train", image: "../src/assets/thomastrack.jpeg", price: 550, category: "Building Blocks" },
+    { id: 4, name: "Rainbow Xylophone", image: "../src/assets/Fashionmusic.jpeg", price: 450, category: "Educational" },
+    { id: 5, name: "Superhero Squad", image: "../src/assets/melody.jpeg", price: 350, category: "Action Figures" },
+    { id: 6, name: "Puzzle Master", image: "../src/assets/musicduck.jpeg", price: 420, category: "Board Games" },
+    { id: 7, name: "Mega Blocks Set", image: "../src/assets/blocks.jpeg", price: 250, category: "Building Blocks" },
+    { id: 8, name: "Soccer Ball", image: "../src/assets/teddyboy.jpeg", price: 300, category: "Outdoor" },
   ];
 
   const filteredToys = toys.filter(toy => toy.category === selectedCategory);

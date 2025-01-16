@@ -3,82 +3,90 @@ import { motion } from "framer-motion";
 
 const VirtualPlayground = () => {
   const [basketPosition, setBasketPosition] = useState(window.innerWidth / 2);
-  const [toy, setToy] = useState(null);
+  const [toys, setToys] = useState([]);
   const [points, setPoints] = useState(0);
-  const [speed, setSpeed] = useState(1); // Slower initial speed
+  const [speed, setSpeed] = useState(2);
   const [gameOver, setGameOver] = useState(false);
-  const [basketSize, setBasketSize] = useState(50); // Initial basket size
 
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowLeft' && basketPosition > 0) {
         setBasketPosition((prev) => prev - 20);
-      } else if (e.key === 'ArrowRight' && basketPosition < window.innerWidth - basketSize) {
+      } else if (e.key === 'ArrowRight' && basketPosition < window.innerWidth - 50) {
         setBasketPosition((prev) => prev + 20);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [basketPosition, basketSize]);
+  }, [basketPosition]);
 
   useEffect(() => {
     if (gameOver) return;
 
-    // Falling toy logic
     const interval = setInterval(() => {
-      setToy((prevToy) => {
-        if (!prevToy) {
-          // Generate a new toy if no toy exists
-          return {
-            id: Date.now(),
-            x: Math.random() * (window.innerWidth - 30),
-            y: 0,
-            emoji: ['🚗', '🎈', '🧸', '🪀'][Math.floor(Math.random() * 4)],
-          };
-        }
+      setToys((prevToys) => {
+        const updatedToys = prevToys.map((toy) => ({
+          ...toy,
+          y: toy.y + speed,
+        }));
 
-        const updatedToy = { ...prevToy, y: prevToy.y + speed };
-
-        // Check for collision with the basket
-        if (
-          updatedToy.y >= window.innerHeight - 100 &&
-          updatedToy.x >= basketPosition - 30 &&
-          updatedToy.x <= basketPosition + basketSize
-        ) {
-          setPoints((prev) => {
-            const newPoints = prev + 1;
-
-            // Increase basket size every 5 points
-            if (newPoints % 5 === 0) {
-              setBasketSize((prevSize) => prevSize + 10);
-            }
-
-            return newPoints;
-          });
-          setSpeed((prev) => prev + 0.1); // Gradual speed increase
-          return null; // Remove toy after collection
-        }
-
-        // Game over if the toy falls beyond the screen
-        if (updatedToy.y > window.innerHeight) {
+        // Check for missed toys
+        const missedToys = updatedToys.filter((toy) => toy.y > window.innerHeight);
+        if (missedToys.length > 0) {
           setGameOver(true);
           clearInterval(interval);
         }
 
-        return updatedToy;
+        return updatedToys.filter((toy) => toy.y <= window.innerHeight);
       });
     }, 50);
 
     return () => clearInterval(interval);
-  }, [speed, gameOver, basketPosition, basketSize]);
+  }, [speed, gameOver]);
+
+  useEffect(() => {
+    if (gameOver) return;
+
+    const toyInterval = setInterval(() => {
+      const newToy = {
+        id: Date.now(),
+        x: Math.random() * (window.innerWidth - 50),
+        y: 0,
+        emoji: ['🚗', '🎈', '🧸', '🪀'][Math.floor(Math.random() * 3)],
+      };
+      setToys((prev) => [...prev, newToy]);
+    }, 1000);
+
+    return () => clearInterval(toyInterval);
+  }, [gameOver]);
+
+  useEffect(() => {
+    // Collision detection
+    setToys((prevToys) =>
+      prevToys.filter((toy) => {
+        const isCollected =
+          toy.y >= window.innerHeight - 100 &&
+          toy.x >= basketPosition - 30 &&
+          toy.x <= basketPosition + 50;
+
+        if (isCollected) {
+          setPoints((prev) => prev + 1);
+          if ((points + 1) % 5 === 0) {
+            setSpeed((prev) => prev + 0.5); // Increase speed every 5 points
+          }
+        }
+
+        return !isCollected;
+      })
+    );
+  }, [basketPosition, points]);
 
   const restartGame = () => {
     setGameOver(false);
-    setToy(null);
+    setToys([]);
     setPoints(0);
-    setSpeed(1);
-    setBasketSize(50);
+    setSpeed(2);
     setBasketPosition(window.innerWidth / 2);
   };
 
@@ -119,14 +127,13 @@ const VirtualPlayground = () => {
               style={{
                 left: basketPosition,
                 bottom: '20px',
-                width: `${basketSize}px`,
-                height: '30px',
               }}
             >
               🧺
             </motion.div>
-            {toy && (
+            {toys.map((toy) => (
               <motion.div
+                key={toy.id}
                 className="text-4xl absolute"
                 style={{ left: toy.x, top: toy.y }}
                 initial={{ opacity: 0, scale: 0 }}
@@ -135,7 +142,7 @@ const VirtualPlayground = () => {
               >
                 {toy.emoji}
               </motion.div>
-            )}
+            ))}
           </>
         )}
       </div>

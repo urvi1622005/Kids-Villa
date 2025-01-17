@@ -30,7 +30,7 @@ const ToyCategories = () => {
     { id: 1, name: "Space Explorer", image: "../src/assets/stunt.jpeg", price: 600, category: "Action Figures" },
     { id: 2, name: "Cuddly Bear", image: "../src/assets/babyDoll.jpeg", price: 400, category: "Dolls" },
     { id: 3, name: "Wooden Train", image: "../src/assets/thomastrack.jpeg", price: 550, category: "Building Blocks" },
-    { id: 4, name: "Rainbow Xylophone", image: "../src/assets/Fashionmusic.jpeg", price: 450, category: "Educational" },
+    { id: 4, name: "Rainbow Xylophone", image: "../src/assets/studybook.jpeg", price: 450, category: "Educational" },
     { id: 5, name: "Superhero Squad", image: "../src/assets/melody.jpeg", price: 350, category: "Action Figures" },
     { id: 6, name: "Puzzle Master", image: "../src/assets/musicduck.jpeg", price: 420, category: "Board Games" },
     { id: 7, name: "Mega Blocks Set", image: "../src/assets/blocks.jpeg", price: 250, category: "Building Blocks" },

@@ -8,7 +8,7 @@ const LoginScreen = () => {
   return (
     <View style={styles.container}>
       {/* Logo at the top */}
-      <Image source={require('../assets/icon.png')} style={styles.logo} />
+      <Image source={require('../assets/logo.jpg')} style={styles.logo} />
 
       {/* Login Box */}
       <View style={styles.loginBox}>

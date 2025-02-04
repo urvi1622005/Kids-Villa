@@ -1,12 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
-import SplashScreen from './SplashScreen';
-import LoginScreen from './LoginScreen';
-import SignupScreen from './SignupScreen';
-import ForgotPassword from './ForgotPassword';
-import CompleteProfile from './CompleteProfile';
-// import HomeScreen from './HomeScreen'; // Placeholder for the main screen
+import DocumentScanner from './DocumentScanner'; // Import Document Scanner Screen
+import OCRScreen from './OCRScreen'; // Import OCR Screen
 
 const Stack = createStackNavigator();
 
@@ -14,21 +10,11 @@ const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* Splash Screen (First screen on app launch) */}
-        <Stack.Screen name="Splash" component={SplashScreen} />
+        {/* Document Scanner Screen */}
+        <Stack.Screen name="DocumentScanner" component={DocumentScanner} />
 
-        {/* Authentication Screens */}
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Signup" component={SignupScreen} />
-        <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-        <Stack.Screen name="CompleteProfile" component={CompleteProfile} />
-
-        {/* Home Screen (Prevents going back after login/profile completion) */}
-        {/* <Stack.Screen 
-          name="Home" 
-          component={HomeScreen} 
-          options={{ gestureEnabled: false }} 
-        /> */}
+        {/* OCR Screen */}
+        <Stack.Screen name="OCRScreen" component={OCRScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

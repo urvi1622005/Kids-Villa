@@ -1,21 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  View, Text, Image, TextInput, StyleSheet, 
-  ActivityIndicator, Alert, ScrollView, TouchableOpacity, SafeAreaView, Dimensions
+  View, Text, Image, StyleSheet, Alert, ScrollView, TouchableOpacity, SafeAreaView, Dimensions 
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera } from 'expo-camera';
-import { useNavigation } from '@react-navigation/native'; // 👈 Import navigation
+import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
 const DocumentScanner = () => {
   const [image, setImage] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasCameraPermission, setHasCameraPermission] = useState(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState(null);
   const cameraRef = useRef(null);
-  const navigation = useNavigation(); // 👈 Get navigation object
+  const navigation = useNavigation();
 
   useEffect(() => {
     (async () => {
@@ -32,7 +31,7 @@ const DocumentScanner = () => {
     setCameraOpen(false);
   };
 
-  // Pick an image from gallery
+  // Pick an image from the gallery
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -52,7 +51,11 @@ const DocumentScanner = () => {
       Alert.alert('Error', 'Please select or scan an image first.');
       return;
     }
-    navigation.navigate('OCRScreen', { imageUri: image }); // 👈 Send image to OCRScreen
+    if (!selectedTemplate) {
+      Alert.alert('Error', 'Please select a template before processing.');
+      return;
+    }
+    navigation.navigate('OCRScreen', { imageUri: image, template: selectedTemplate });
   };
 
   return (
@@ -92,6 +95,29 @@ const DocumentScanner = () => {
           {/* Image Preview */}
           {image && <Image source={{ uri: image }} style={styles.image} />}
 
+          {/* Template Selection */}
+          <Text style={styles.subTitle}>Select a Template</Text>
+          <View style={styles.templateContainer}>
+            <TouchableOpacity
+              style={[
+                styles.templateButton,
+                selectedTemplate === 'Standard' && styles.selectedTemplate,
+              ]}
+              onPress={() => setSelectedTemplate('Standard')}
+            >
+              <Text style={styles.buttonText}>📄 Standard</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.templateButton,
+                selectedTemplate === 'Handwritten' && styles.selectedTemplate,
+              ]}
+              onPress={() => setSelectedTemplate('Handwritten')}
+            >
+              <Text style={styles.buttonText}>✍️ Handwritten</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Navigate to OCR Screen */}
           <TouchableOpacity style={styles.actionButton} onPress={goToOCRScreen}>
             <Text style={styles.buttonText}>🔍 Process OCR</Text>
@@ -106,6 +132,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9f9f9' },
   content: { alignItems: 'center', padding: width * 0.05 },
   title: { fontSize: 24, fontWeight: 'bold', marginVertical: 20, textAlign: 'center', color: '#333' },
+  subTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 5, color: '#555' },
   image: { width: width * 0.9, height: height * 0.3, resizeMode: 'contain', marginVertical: 10, borderRadius: 10 },
   cameraContainer: { flex: 1, width: '100%', height: '100%' },
   camera: { flex: 1, width: '100%', height: '100%' },
@@ -120,6 +147,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF', padding: 15, borderRadius: 10, 
     alignItems: 'center', marginVertical: 5, width: '90%' 
   },
+  templateContainer: { flexDirection: 'row', justifyContent: 'space-around', width: '90%', marginVertical: 10 },
+  templateButton: { 
+    backgroundColor: '#28a745', padding: 12, borderRadius: 8, alignItems: 'center', width: '45%' 
+  },
+  selectedTemplate: { backgroundColor: '#0056b3' },
   buttonText: { fontSize: 16, fontWeight: 'bold', color: 'white' },
 });
 

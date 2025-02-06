@@ -1,158 +1,140 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import { 
-  View, Text, Image, StyleSheet, Alert, ScrollView, TouchableOpacity, SafeAreaView, Dimensions 
-} from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { Camera } from 'expo-camera';
-import { useNavigation } from '@react-navigation/native';
+  View, Text, Image, StyleSheet, Alert, TouchableOpacity, SafeAreaView, ActivityIndicator, Platform
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { useNavigation } from "@react-navigation/native";
 
-const { width, height } = Dimensions.get('window');
+// Dynamic Import for Web Camera (react-webcam)
+let Webcam;
+if (Platform.OS === "web") {
+  Webcam = require("react-webcam").default;
+}
+
+// Dynamic Import for Mobile Camera (react-native-vision-camera)
+let Camera;
+if (Platform.OS !== "web") {
+  Camera = require("react-native-vision-camera").Camera;
+}
 
 const DocumentScanner = () => {
   const [image, setImage] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [hasPermission, setHasPermission] = useState(null);
   const [cameraOpen, setCameraOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState(null);
   const cameraRef = useRef(null);
   const navigation = useNavigation();
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasCameraPermission(status === 'granted');
-    })();
+    if (Platform.OS !== "web") {
+      (async () => {
+        const cameraStatus = await Camera.requestCameraPermission();
+        setHasPermission(cameraStatus === "granted");
+      })();
+    }
   }, []);
 
-  // Open Camera for Scanning
-  const takePicture = async () => {
-    if (!cameraRef.current) return;
-    const photo = await cameraRef.current.takePictureAsync();
-    setImage(photo.uri);
-    setCameraOpen(false);
+  // Open Camera (Only for Mobile)
+  const openCamera = () => {
+    if (Platform.OS === "web") {
+      Alert.alert("Camera not supported on Web. Use Upload instead.");
+      return;
+    }
+    if (!hasPermission) {
+      Alert.alert("Permission Denied", "Camera access is required to scan documents.");
+      return;
+    }
+    setCameraOpen(true);
   };
 
-  // Pick an image from the gallery
+  // Capture Image (Mobile)
+  const takePicture = async () => {
+    if (!cameraRef.current) return;
+    const photo = await cameraRef.current.takePhoto({ quality: 1 });
+    setIsProcessing(true);
+    setImage(photo.path);
+    setIsProcessing(false);
+  };
+
+  // Pick Image from Gallery (Both Mobile & Web)
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [4, 3],
       quality: 1,
     });
 
     if (!result.canceled && result.assets.length > 0) {
+      setIsProcessing(true);
       setImage(result.assets[0].uri);
+      setIsProcessing(false);
     }
-  };
-
-  // Navigate to OCR Screen
-  const goToOCRScreen = () => {
-    if (!image) {
-      Alert.alert('Error', 'Please select or scan an image first.');
-      return;
-    }
-    if (!selectedTemplate) {
-      Alert.alert('Error', 'Please select a template before processing.');
-      return;
-    }
-    navigation.navigate('OCRScreen', { imageUri: image, template: selectedTemplate });
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>📄 AI Document Scanner</Text>
 
-      {cameraOpen ? (
+      {Platform.OS === "web" ? (
+        <Webcam
+          audio={false}
+          height={300}
+          width={300}
+          screenshotFormat="image/jpeg"
+          ref={cameraRef}
+        />
+      ) : cameraOpen ? (
         <View style={styles.cameraContainer}>
           <Camera 
             style={styles.camera} 
-            type={Camera.Constants.Type.back} 
             ref={cameraRef}
-            ratio="16:9"
-          >
-            <View style={styles.cameraOverlay}>
-              <TouchableOpacity onPress={takePicture} style={styles.captureButton}>
-                <Text style={styles.buttonText}>📸 Capture</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setCameraOpen(false)} style={styles.cancelButton}>
-                <Text style={styles.buttonText}>❌ Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </Camera>
+            isActive={true}
+            photo={true}
+          />
+          <View style={styles.cameraOverlay}>
+            <TouchableOpacity onPress={takePicture} style={styles.captureButton}>
+              <Text style={styles.buttonText}>📸 Capture</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setCameraOpen(false)} style={styles.cancelButton}>
+              <Text style={styles.buttonText}>❌ Cancel</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.content}>
-          {/* Buttons */}
+        <>
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.actionButton} onPress={pickImage}>
               <Text style={styles.buttonText}>🖼️ Pick from Gallery</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={() => setCameraOpen(true)}>
+            <TouchableOpacity style={styles.actionButton} onPress={openCamera}>
               <Text style={styles.buttonText}>📄 Scan Document</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Image Preview */}
+          {isProcessing && <ActivityIndicator size="large" color="#007AFF" />}
+
           {image && <Image source={{ uri: image }} style={styles.image} />}
-
-          {/* Template Selection */}
-          <Text style={styles.subTitle}>Select a Template</Text>
-          <View style={styles.templateContainer}>
-            <TouchableOpacity
-              style={[
-                styles.templateButton,
-                selectedTemplate === 'Standard' && styles.selectedTemplate,
-              ]}
-              onPress={() => setSelectedTemplate('Standard')}
-            >
-              <Text style={styles.buttonText}>📄 Standard</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.templateButton,
-                selectedTemplate === 'Handwritten' && styles.selectedTemplate,
-              ]}
-              onPress={() => setSelectedTemplate('Handwritten')}
-            >
-              <Text style={styles.buttonText}>✍️ Handwritten</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Navigate to OCR Screen */}
-          <TouchableOpacity style={styles.actionButton} onPress={goToOCRScreen}>
-            <Text style={styles.buttonText}>🔍 Process OCR</Text>
-          </TouchableOpacity>
-        </ScrollView>
+        </>
       )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9f9f9' },
-  content: { alignItems: 'center', padding: width * 0.05 },
-  title: { fontSize: 24, fontWeight: 'bold', marginVertical: 20, textAlign: 'center', color: '#333' },
-  subTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 5, color: '#555' },
-  image: { width: width * 0.9, height: height * 0.3, resizeMode: 'contain', marginVertical: 10, borderRadius: 10 },
-  cameraContainer: { flex: 1, width: '100%', height: '100%' },
-  camera: { flex: 1, width: '100%', height: '100%' },
+  container: { flex: 1, backgroundColor: "#f9f9f9", alignItems: "center", paddingTop: 20 },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 10, color: "#333" },
+  cameraContainer: { flex: 1, width: "100%" },
+  camera: { flex: 1, width: "100%" },
   cameraOverlay: { 
-    flex: 1, flexDirection: 'row', justifyContent: 'space-between', 
-    alignItems: 'flex-end', paddingBottom: 20, backgroundColor: 'transparent'
+    flex: 1, flexDirection: "row", justifyContent: "space-between", 
+    alignItems: "flex-end", paddingBottom: 20, backgroundColor: "transparent"
   },
-  captureButton: { backgroundColor: '#007AFF', padding: 15, borderRadius: 50, marginHorizontal: 20 },
-  cancelButton: { backgroundColor: '#FF3B30', padding: 15, borderRadius: 50, marginHorizontal: 20 },
-  buttonContainer: { flexDirection: 'column', width: '100%', alignItems: 'center' },
-  actionButton: { 
-    backgroundColor: '#007AFF', padding: 15, borderRadius: 10, 
-    alignItems: 'center', marginVertical: 5, width: '90%' 
-  },
-  templateContainer: { flexDirection: 'row', justifyContent: 'space-around', width: '90%', marginVertical: 10 },
-  templateButton: { 
-    backgroundColor: '#28a745', padding: 12, borderRadius: 8, alignItems: 'center', width: '45%' 
-  },
-  selectedTemplate: { backgroundColor: '#0056b3' },
-  buttonText: { fontSize: 16, fontWeight: 'bold', color: 'white' },
+  captureButton: { backgroundColor: "#007AFF", padding: 15, borderRadius: 50, marginHorizontal: 20 },
+  cancelButton: { backgroundColor: "#FF3B30", padding: 15, borderRadius: 50, marginHorizontal: 20 },
+  buttonContainer: { flexDirection: "column", width: "90%", alignItems: "center" },
+  actionButton: { backgroundColor: "#007AFF", padding: 15, borderRadius: 10, marginVertical: 5, width: "90%" },
+  buttonText: { fontSize: 16, fontWeight: "bold", color: "white", textAlign: "center" },
+  image: { width: 250, height: 250, borderRadius: 10, marginTop: 10 },
 });
 
 export default DocumentScanner;

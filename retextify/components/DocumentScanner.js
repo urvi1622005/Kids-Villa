@@ -1,37 +1,45 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
-  View, Text, Image, StyleSheet, Alert, TouchableOpacity, SafeAreaView, ActivityIndicator, Platform
+  View, Text, Image, StyleSheet, Alert, TouchableOpacity, SafeAreaView, ActivityIndicator, Platform 
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
-
-// Dynamic Import for Web Camera (react-webcam)
-let Webcam;
-if (Platform.OS === "web") {
-  Webcam = require("react-webcam").default;
-}
-
-// Dynamic Import for Mobile Camera (react-native-vision-camera)
-let Camera;
-if (Platform.OS !== "web") {
-  Camera = require("react-native-vision-camera").Camera;
-}
 
 const DocumentScanner = () => {
   const [image, setImage] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [webCamLoaded, setWebCamLoaded] = useState(false);
   const cameraRef = useRef(null);
   const navigation = useNavigation();
 
+  let Webcam;
+  let Camera;
+
+  // Dynamically Import for Web & Mobile
   useEffect(() => {
-    if (Platform.OS !== "web") {
-      (async () => {
-        const cameraStatus = await Camera.requestCameraPermission();
-        setHasPermission(cameraStatus === "granted");
-      })();
+    let isMounted = true;
+
+    if (Platform.OS === "web") {
+      import("react-webcam").then((mod) => {
+        if (isMounted) {
+          Webcam = mod.default;
+          setWebCamLoaded(true);
+        }
+      });
+    } else {
+      import("react-native-vision-camera").then((mod) => {
+        Camera = mod.Camera;
+        mod.Camera.requestCameraPermission().then((status) => {
+          setHasPermission(status === "granted");
+        });
+      });
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Open Camera (Only for Mobile)
@@ -75,22 +83,11 @@ const DocumentScanner = () => {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>📄 AI Document Scanner</Text>
 
-      {Platform.OS === "web" ? (
-        <Webcam
-          audio={false}
-          height={300}
-          width={300}
-          screenshotFormat="image/jpeg"
-          ref={cameraRef}
-        />
+      {Platform.OS === "web" && webCamLoaded ? (
+        <Webcam audio={false} height={300} width={300} screenshotFormat="image/jpeg" ref={cameraRef} />
       ) : cameraOpen ? (
         <View style={styles.cameraContainer}>
-          <Camera 
-            style={styles.camera} 
-            ref={cameraRef}
-            isActive={true}
-            photo={true}
-          />
+          <Camera style={styles.camera} ref={cameraRef} isActive={true} photo={true} />
           <View style={styles.cameraOverlay}>
             <TouchableOpacity onPress={takePicture} style={styles.captureButton}>
               <Text style={styles.buttonText}>📸 Capture</Text>

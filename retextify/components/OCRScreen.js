@@ -4,11 +4,12 @@ import {
   TouchableOpacity, StyleSheet 
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import axios from "axios";
-import { useRoute } from "@react-navigation/native";
+import Tesseract from "tesseract.js";
+import { useRoute, useNavigation } from "@react-navigation/native";
 
 const OCRScreen = () => {
   const route = useRoute();
+  const navigation = useNavigation();
   const { imageUri: initialImage } = route.params || {};  
   const [image, setImage] = useState(initialImage);
   const [loading, setLoading] = useState(false);
@@ -36,7 +37,7 @@ const OCRScreen = () => {
     }
   };
 
-  // Extract text from image using OCR API
+  // Extract text from image using Tesseract.js
   const extractTextFromImage = async (imageUri) => {
     if (!imageUri) return;
 
@@ -44,21 +45,10 @@ const OCRScreen = () => {
     setExtractedText("");
     setCustomText("");
 
-    const formData = new FormData();
-    formData.append("image", {
-      uri: imageUri,
-      type: "image/jpeg",
-      name: "photo.jpg",
-    });
-
     try {
-      const response = await axios.post("https://your-backend-api.com/ocr", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      const extracted = response.data.text || "No text detected.";
-      setExtractedText(extracted);
-      setCustomText(extracted);
+      const { data: { text } } = await Tesseract.recognize(imageUri, "eng");
+      setExtractedText(text || "No text detected.");
+      setCustomText(text || "No text detected.");
     } catch (error) {
       console.error("OCR Error:", error);
       Alert.alert("Error", "Failed to extract text.");
@@ -71,18 +61,31 @@ const OCRScreen = () => {
   const applyTemplate = (template) => {
     setSelectedTemplate(template);
 
+    let formattedText = extractedText;
     if (template === "Standard") {
-      setCustomText(`📄 Standard Document\n\n${extractedText}`);
+      formattedText = `📄 Standard Document\n\n${extractedText}`;
     } else if (template === "Handwritten") {
-      setCustomText(`✍️ Handwritten Style\n\n"${extractedText}"`);
+      formattedText = `✍️ Handwritten Style\n\n"${extractedText}"`;
     } else if (template === "Custom") {
-      setCustomText(extractedText); // Let user edit freely
+      formattedText = extractedText; // Let user edit freely
     }
+
+    setCustomText(formattedText);
+  };
+
+  // Navigate to DocumentScanner for scanning
+  const navigateToDocumentScanner = () => {
+    navigation.navigate("DocumentScanner");
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>📄 OCR & Template Formatting</Text>
+
+      {/* Button to navigate to DocumentScanner */}
+      <TouchableOpacity style={styles.actionButton} onPress={navigateToDocumentScanner}>
+        <Text style={styles.buttonText}>📄 Scan Document</Text>
+      </TouchableOpacity>
 
       {/* Image Preview */}
       {image && <Image source={{ uri: image }} style={styles.image} />}
@@ -98,6 +101,7 @@ const OCRScreen = () => {
             multiline
             value={customText}
             onChangeText={setCustomText}
+            placeholder="Extracted text will appear here..."
           />
         </>
       ) : null}
@@ -149,6 +153,8 @@ const OCRScreen = () => {
 const styles = StyleSheet.create({
   container: { flexGrow: 1, alignItems: "center", padding: 20 },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 10 },
+  actionButton: { backgroundColor: "#007AFF", padding: 15, borderRadius: 10, marginVertical: 5, width: "90%" },
+  buttonText: { fontSize: 16, fontWeight: "bold", color: "white", textAlign: "center" },
   image: { width: 200, height: 200, resizeMode: "contain", marginVertical: 10 },
   subTitle: { fontSize: 18, fontWeight: "bold", marginVertical: 10 },
   textArea: {

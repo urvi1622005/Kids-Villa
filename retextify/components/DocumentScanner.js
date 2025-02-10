@@ -1,23 +1,16 @@
-import React, { useState, useRef, useEffect } from "react";
-import { 
-  View, Text, Image, StyleSheet, Alert, TouchableOpacity, SafeAreaView, ActivityIndicator, Platform, TextInput 
+import React, { useState, useEffect } from "react";
+import {
+  View, Text, Image, StyleSheet, Alert, TouchableOpacity, SafeAreaView, ActivityIndicator, TextInput
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
-import Webcam from "react-webcam"; // For Web
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer } from '@react-navigation/native';
 import { analyzeText } from "./ocrUtils"; // Function to analyze text using OCR
-import { generatePDF, generatePPTX } from "./exportUtils"; // Exporting utilities
-
-const Stack = createNativeStackNavigator();
 
 const DocumentScanner = ({ route }) => {
   const [image, setImage] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedText, setExtractedText] = useState(route?.params?.updatedText || "");
   const navigation = useNavigation();
-  const webcamRef = useRef(null);
 
   useEffect(() => {
     if (route?.params?.updatedText) {
@@ -27,19 +20,19 @@ const DocumentScanner = ({ route }) => {
 
   // Open Camera for Scanning
   const openCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert("Permission Denied", "Camera permission is required to scan documents.");
+      return;
+    }
+
     let result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
     });
 
-    if (!result.canceled && result.assets.length > 0) {
-      setIsProcessing(true);
-      setImage(result.assets[0].uri);
-      const text = await analyzeText(result.assets[0].uri);
-      setExtractedText(text);
-      setIsProcessing(false);
-    }
+    handleImageResult(result);
   };
 
   // Pick Image from Gallery
@@ -50,12 +43,22 @@ const DocumentScanner = ({ route }) => {
       quality: 1,
     });
 
+    handleImageResult(result);
+  };
+
+  // Handle Image Result
+  const handleImageResult = async (result) => {
     if (!result.canceled && result.assets.length > 0) {
       setIsProcessing(true);
       setImage(result.assets[0].uri);
-      const text = await analyzeText(result.assets[0].uri);
-      setExtractedText(text);
-      setIsProcessing(false);
+      try {
+        const text = await analyzeText(result.assets[0].uri);
+        setExtractedText(text);
+      } catch (error) {
+        Alert.alert("Error", "Failed to extract text. Please try again.");
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -68,7 +71,7 @@ const DocumentScanner = ({ route }) => {
           <Text style={styles.buttonText}>🖼️ Pick from Gallery</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton} onPress={openCamera}>
-          <Text style={styles.buttonText}>📄 Scan Document</Text>
+          <Text style={styles.buttonText}>📷 Scan Document</Text>
         </TouchableOpacity>
       </View>
 
@@ -77,48 +80,23 @@ const DocumentScanner = ({ route }) => {
       {image && (
         <>
           <Image source={{ uri: image }} style={styles.image} />
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => navigation.navigate('OCRScreen', { imageUri: image })}
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('EditText', { text: extractedText })}
           >
             <Text style={styles.buttonText}>✍️ Edit Extracted Text</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('TemplateChooser', { text: extractedText })}
+          >
+            <Text style={styles.buttonText}>📄 Choose Template</Text>
           </TouchableOpacity>
         </>
       )}
     </SafeAreaView>
   );
 };
-
-const EditTextScreen = ({ route, navigation }) => {
-  const [text, setText] = useState(route.params.text);
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>📝 Edit Extracted Text</Text>
-      <TextInput
-        multiline
-        style={styles.textInput}
-        value={text}
-        onChangeText={setText}
-      />
-      <TouchableOpacity
-        style={styles.actionButton}
-        onPress={() => navigation.navigate('Scanner', { updatedText: text })}
-      >
-        <Text style={styles.buttonText}>✅ Save & Go Back</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
-  );
-};
-
-const DocumentScannerApp = () => (
-  <NavigationContainer>
-    <Stack.Navigator>
-      <Stack.Screen name="Scanner" component={DocumentScanner} />
-      <Stack.Screen name="EditText" component={EditTextScreen} />
-      <Stack.Screen name="TemplateChooser" component={TemplateChooser} />
-    </Stack.Navigator>
-  </NavigationContainer>
-);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f9f9f9", alignItems: "center", paddingTop: 20 },

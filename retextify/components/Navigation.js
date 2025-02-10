@@ -11,10 +11,11 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {/* Document Scanner Screen */}
-        <Stack.Screen name="DocumentScanner" component={DocumentScanner} />
+        {/* <Stack.Screen name="DocumentScanner" component={DocumentScanner} /> */}
 
         {/* OCR Screen */}
         <Stack.Screen name="OCRScreen" component={OCRScreen} />
+        <Stack.Screen name="DocumentScanner" component={DocumentScanner}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

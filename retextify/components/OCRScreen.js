@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   View, Button, Image, Alert, ActivityIndicator, Text, TextInput, ScrollView, 
   TouchableOpacity, StyleSheet 
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Tesseract from "tesseract.js";
-import { useRoute, useNavigation } from "@react-navigation/native";
+import { useRoute, useNavigation, useFocusEffect } from "@react-navigation/native";
 
 const OCRScreen = () => {
   const route = useRoute();
@@ -23,7 +23,14 @@ const OCRScreen = () => {
     }
   }, [initialImage]);
 
-  // Pick Image Again
+  useFocusEffect(
+    React.useCallback(() => {
+      if (route.params?.updatedText) {
+        setCustomText(route.params.updatedText);
+      }
+    }, [route.params?.updatedText])
+  );
+
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -37,7 +44,6 @@ const OCRScreen = () => {
     }
   };
 
-  // Extract text from image using Tesseract.js
   const extractTextFromImage = async (imageUri) => {
     if (!imageUri) return;
 
@@ -57,7 +63,6 @@ const OCRScreen = () => {
     }
   };
 
-  // Apply Template Formatting
   const applyTemplate = (template) => {
     setSelectedTemplate(template);
 
@@ -73,7 +78,6 @@ const OCRScreen = () => {
     setCustomText(formattedText);
   };
 
-  // Navigate to DocumentScanner for scanning
   const navigateToDocumentScanner = () => {
     navigation.navigate("DocumentScanner");
   };
@@ -82,17 +86,21 @@ const OCRScreen = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>📄 OCR & Template Formatting</Text>
 
-      {/* Button to navigate to DocumentScanner */}
       <TouchableOpacity style={styles.actionButton} onPress={navigateToDocumentScanner}>
         <Text style={styles.buttonText}>📄 Scan Document</Text>
       </TouchableOpacity>
 
-      {/* Image Preview */}
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => navigation.navigate("TemplateChooser", { text: extractedText })}
+      >
+        <Text style={styles.buttonText}>📄 Choose Template</Text>
+      </TouchableOpacity>
+
       {image && <Image source={{ uri: image }} style={styles.image} />}
 
       {loading && <ActivityIndicator size="large" color="#007AFF" />}
       
-      {/* Extracted Text */}
       {!loading && extractedText ? (
         <>
           <Text style={styles.subTitle}>Extracted Text</Text>
@@ -106,7 +114,6 @@ const OCRScreen = () => {
         </>
       ) : null}
 
-      {/* Template Selection */}
       {!loading && extractedText ? (
         <>
           <Text style={styles.subTitle}>Choose a Template</Text>
@@ -144,7 +151,6 @@ const OCRScreen = () => {
         </>
       ) : null}
 
-      {/* Pick Another Image */}
       <Button title="📂 Pick Another Image" onPress={pickImage} />
     </ScrollView>
   );
@@ -170,7 +176,6 @@ const styles = StyleSheet.create({
   templateContainer: { flexDirection: "row", justifyContent: "space-around", width: "90%", marginVertical: 10 },
   templateButton: { backgroundColor: "#28a745", padding: 12, borderRadius: 8, alignItems: "center", width: "30%" },
   selectedTemplate: { backgroundColor: "#0056b3" },
-  buttonText: { fontSize: 16, fontWeight: "bold", color: "white" },
 });
 
 export default OCRScreen;

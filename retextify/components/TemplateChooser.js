@@ -1,101 +1,106 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 const TemplateChooser = ({ route }) => {
   const navigation = useNavigation();
   const { text } = route.params;
 
-  // Custom Templates
-  const templates = [
-    {
-      id: 1,
-      name: "Resume Template",
-      content: `John Doe
-123 Main Street, City, State, ZIP
-Phone: (123) 456-7890 | Email: john.doe@example.com
+  const categories = ["Resume", "Invoice", "Letter", "Business", "Personal"];
 
-Objective:
-To obtain a position as a Software Engineer where I can utilize my skills and experience to contribute to the success of the company.
+  const allTemplates = {
+    Resume: [
+      {
+        id: 1,
+        name: "Standard Resume",
+        content: `John Doe\n123 Main Street, City, State, ZIP\nPhone: (123) 456-7890 | Email: john.doe@example.com\n\nObjective:\nTo obtain a position as a Software Engineer.`,
+      },
+      {
+        id: 2,
+        name: "Creative Resume",
+        content: `Jane Doe\nInnovative Developer\nPortfolio: www.janedoe.com | Contact: jane.doe@example.com\n\nSummary:\nPassionate about front-end development and UI/UX design.`,
+      },
+    ],
+    Invoice: [
+      {
+        id: 3,
+        name: "Standard Invoice",
+        content: `Invoice #56789\nBill To: XYZ Corp\nAmount Due: $1200\nDue Date: 15th March 2024.`,
+      },
+      {
+        id: 4,
+        name: "Freelancer Invoice",
+        content: `Invoice #78901\nBill To: John Client\nService: Web Development\nTotal: $800 | Due: 10th Feb 2024.`,
+      },
+    ],
+    Letter: [
+      {
+        id: 5,
+        name: "Formal Letter",
+        content: `Dear [Recipient],\nI hope this letter finds you well.\nSincerely,\n[Your Name]`,
+      },
+      {
+        id: 6,
+        name: "Casual Letter",
+        content: `Hey [Friend],\nHope you are doing great! Let's catch up soon.`,
+      },
+    ],
+    Business: [
+      {
+        id: 7,
+        name: "Business Proposal",
+        content: `Proposal for ABC Solutions\nProject Scope: Web development project for automation.`,
+      },
+      {
+        id: 8,
+        name: "Meeting Agenda",
+        content: `Agenda:\n1. Review last meeting notes\n2. Discuss new project requirements.`,
+      },
+    ],
+    Personal: [
+      {
+        id: 9,
+        name: "Diary Entry",
+        content: `Today was an amazing day! I explored a new coffee shop.`,
+      },
+      {
+        id: 10,
+        name: "Birthday Invitation",
+        content: `You are invited to my birthday party on 25th March at XYZ Cafe!`,
+      },
+    ],
+  };
 
-Education:
-Bachelor of Science in Computer Science
-University of Example, Graduation Date: May 2020
-
-Experience:
-Software Engineer Intern
-ABC Company, Summer 2019
-- Developed and maintained web applications using React and Node.js
-- Collaborated with the team to design and implement new features
-
-Skills:
-- Programming Languages: JavaScript, Python, Java
-- Frameworks: React, Node.js, Express
-- Tools: Git, Docker, AWS`,
-    },
-    {
-      id: 2,
-      name: "Old Document Template",
-      content: `This is an example of an old document.
-
-Date: January 1, 1900
-To Whom It May Concern,
-
-This document serves as a record of historical significance. It contains information about events that occurred in the past and is preserved for future generations.
-
-Sincerely,
-Historical Society`,
-    },
-    {
-      id: 3,
-      name: "Invoice Template",
-      content: `Invoice #12345
-Date: October 10, 2023
-
-Bill To:
-Jane Doe
-456 Elm Street, City, State, ZIP
-
-Description:
-- Web Development Services: $500
-- Hosting and Maintenance: $200
-
-Total Amount Due: $700
-
-Payment Due Date: November 10, 2023`,
-    },
-    {
-      id: 4,
-      name: "Letter Template",
-      content: `October 10, 2023
-
-Dear [Recipient's Name],
-
-I am writing to inform you about an important matter. Please review the details below and let me know if you have any questions.
-
-Sincerely,
-[Your Name]`,
-    },
-  ];
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const templates = allTemplates[selectedCategory];
 
   const handleTemplateSelection = (template) => {
-    navigation.navigate("DocumentScanner", { updatedText: template.content });
+    navigation.navigate("OCRScreen", { updatedText: template.content });
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Choose a Template</Text>
-      <View style={styles.templateContainer}>
-        {templates.map((template) => (
+      <View style={styles.categoryContainer}>
+        {categories.map((category) => (
           <TouchableOpacity
-            key={template.id}
-            style={styles.templateButton}
-            onPress={() => handleTemplateSelection(template)}
+            key={category}
+            style={[styles.categoryButton, selectedCategory === category && styles.selectedCategory]}
+            onPress={() => setSelectedCategory(category)}
           >
-            <Text style={styles.templateText}>{template.name}</Text>
+            <Text style={styles.categoryText}>{category}</Text>
           </TouchableOpacity>
         ))}
       </View>
+      <FlatList
+        data={templates}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.templateButton} onPress={() => handleTemplateSelection(item)}>
+            <Text style={styles.templateText}>{item.name}</Text>
+          </TouchableOpacity>
+        )}
+      />
     </SafeAreaView>
   );
 };
@@ -110,18 +115,35 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: 10,
     color: "#333",
   },
-  templateContainer: {
-    width: "90%",
+  categoryContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  categoryButton: {
+    backgroundColor: "#ddd",
+    padding: 10,
+    margin: 5,
+    borderRadius: 8,
+  },
+  selectedCategory: {
+    backgroundColor: "#007AFF",
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "black",
   },
   templateButton: {
     backgroundColor: "#007AFF",
     padding: 15,
     borderRadius: 10,
     marginVertical: 5,
-    width: "100%",
+    width: "90%",
     alignItems: "center",
   },
   templateText: {

@@ -1,10 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Alert } from 'react-native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_URL = 'http://localhost:5000/api/auth';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
-  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const { data } = await axios.post(`${API_URL}/login`, {
+        email,
+        password
+      });
+
+      // Store token and user data
+      await AsyncStorage.setItem('userToken', data.token);
+      await AsyncStorage.setItem('userData', JSON.stringify(data));
+
+      // Navigate to main app screen
+      navigation.navigate('Home');
+
+    } catch (error) {
+      let errorMessage = 'Login failed';
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+      }
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Logo at the top */}
@@ -14,15 +54,36 @@ const LoginScreen = () => {
       <View style={styles.loginBox}>
         <Text style={styles.title}>Login</Text>
 
-        <TextInput placeholder="Email" placeholderTextColor="#bbb" style={styles.input} />
-        <TextInput placeholder="Password" placeholderTextColor="#bbb" secureTextEntry style={styles.input} />
+        <TextInput 
+          placeholder="Email" 
+          placeholderTextColor="#bbb" 
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput 
+          placeholder="Password" 
+          placeholderTextColor="#bbb" 
+          secureTextEntry 
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+        />
 
         <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.loginButton}>
-          <Text style={styles.loginButtonText}>Login</Text>
+        <TouchableOpacity 
+          style={styles.loginButton} 
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={styles.loginButtonText}>
+            {loading ? 'Logging in...' : 'Login'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Signup')}>

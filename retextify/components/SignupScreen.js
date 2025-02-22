@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   signupBox: {
     width: '90%',
     maxWidth: 400,
-    backgroundColor: '#1E1E1E', // Slightly lighter box
+    backgroundColor: '#1E1E1E', 
     padding: 20,
     borderRadius: 15,
     alignItems: 'center',

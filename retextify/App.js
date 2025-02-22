@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './components/LoginScreen';
 import SignupScreen from './components/SignupScreen';
 import ForgotPassword from './components/ForgotPassword';
-import Home from './components/Home'; // Assuming there's a Home component
+// import Home from './components/Home'; // Assuming there's a Home component
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Stack = createStackNavigator();
@@ -38,8 +38,8 @@ const App = () => {
       <Stack.Navigator>
         {userToken ? (
           <>
-            <Stack.Screen name="Home" component={Home} />
-            {/* Add other protected routes here */}
+            <Stack.Screen name="Login" component={LoginScreen} />
+            {/* Add other protected routes he bre */}
           </>
         ) : (
           <>

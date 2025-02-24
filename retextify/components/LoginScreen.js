@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Alert } from 'react-native';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const API_URL = 'http://localhost:5000/api/auth';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+
+const API_URL = 'http://localhost:5000/api/auth';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -21,17 +20,13 @@ const LoginScreen = () => {
 
     try {
       setLoading(true);
-      
+
       const { data } = await axios.post(`${API_URL}/login`, {
         email,
         password
       });
 
-      // Store token and user data
-      await AsyncStorage.setItem('userToken', data.token);
-      await AsyncStorage.setItem('userData', JSON.stringify(data));
-
-      // Navigate to main app screen
+      // Navigate to main app screen after successful login
       navigation.navigate('Home');
 
     } catch (error) {
@@ -101,7 +96,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#121212', // Dark background
+    backgroundColor: '#121212',
     padding: 20,
   },
   logo: {
@@ -112,7 +107,7 @@ const styles = StyleSheet.create({
   loginBox: {
     width: '90%',
     maxWidth: 400,
-    backgroundColor: '#1E1E1E', // Slightly lighter box
+    backgroundColor: '#1E1E1E',
     padding: 20,
     borderRadius: 15,
     alignItems: 'center',

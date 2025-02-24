@@ -20,7 +20,7 @@ const AppNavigator = () => {
         {/* OCR Screen */}
         {/* <Stack.Screen name="loginScreen" component={LoginScreen} /> */}
         {/* <Stack.Screen name="SignUpScreen" component={SignUpScreen} />   */}
-        <Stack.Screen name="SplashScreen" component={SplashScreen} />
+        {/* <Stack.Screen name="SplashScreen" component={SplashScreen} /> */}
         <Stack.Screen name="OCRScreen" component={OCRScreen} />
         <Stack.Screen name="DocumentScanner" component={DocumentScanner}/>
       </Stack.Navigator>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Alert, View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { Alert, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
 const API_URL = 'http://localhost:5000/api/auth';
@@ -21,18 +20,14 @@ const SignupScreen = () => {
 
     try {
       setLoading(true);
-      
+
       const { data } = await axios.post(`${API_URL}/register`, {
         name,
         email,
         password
       });
 
-      // Store token and user data
-      await AsyncStorage.setItem('userToken', data.token);
-      await AsyncStorage.setItem('userData', JSON.stringify(data));
-
-      // Navigate to main app screen
+      // Navigate to home screen after successful signup
       navigation.navigate('Home');
 
     } catch (error) {
@@ -53,6 +48,7 @@ const SignupScreen = () => {
         value={name}
         onChangeText={setName}
         style={styles.input}
+        placeholderTextColor="#bbb"
       />
       <TextInput
         placeholder="Email"
@@ -61,6 +57,7 @@ const SignupScreen = () => {
         keyboardType="email-address"
         autoCapitalize="none"
         style={styles.input}
+        placeholderTextColor="#bbb"
       />
       <TextInput
         placeholder="Password"
@@ -68,6 +65,7 @@ const SignupScreen = () => {
         onChangeText={setPassword}
         secureTextEntry
         style={styles.input}
+        placeholderTextColor="#bbb"
       />
       <TouchableOpacity
         style={styles.signupButton}
@@ -92,31 +90,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#121212', // Dark theme background
+    backgroundColor: '#121212', 
     padding: 20,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 20,
-  },
-  signupBox: {
-    width: '90%',
-    maxWidth: 400,
-    backgroundColor: '#1E1E1E', 
-    padding: 20,
-    borderRadius: 15,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  title: {
-    fontSize: 24,
-    color: 'white',
-    fontWeight: 'bold',
-    marginBottom: 15,
   },
   input: {
     width: '100%',

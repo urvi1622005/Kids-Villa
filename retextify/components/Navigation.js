@@ -8,6 +8,7 @@ import SignUpScreen from './SignupScreen';
 import SplashScreen from './SplashScreen';
 
 
+
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
@@ -23,6 +24,7 @@ const AppNavigator = () => {
         {/* <Stack.Screen name="SplashScreen" component={SplashScreen} /> */}
         <Stack.Screen name="OCRScreen" component={OCRScreen} />
         <Stack.Screen name="DocumentScanner" component={DocumentScanner}/>
+        
       </Stack.Navigator>
     </NavigationContainer>
   );

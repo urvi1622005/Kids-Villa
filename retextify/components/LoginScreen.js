@@ -4,7 +4,7 @@ import axios from 'axios';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-const API_URL = 'http://localhost:5000/api/auth'; // Replace <YOUR_LOCAL_IP> with your local network IP
+const API_URL = 'http://localhost:5000/api/auth/login'; // Replace <YOUR_LOCAL_IP> with your local network IP
 
 const LoginScreen = () => {
   const navigation = useNavigation();

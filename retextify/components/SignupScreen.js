@@ -3,7 +3,7 @@ import { Alert, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'reac
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 
-const API_URL = 'http://localhost:5000/api/auth';
+const API_URL = 'http://localhost:5000/api';
 
 const SignupScreen = () => {
   const navigation = useNavigation();
@@ -21,14 +21,14 @@ const SignupScreen = () => {
     try {
       setLoading(true);
 
-      const { data } = await axios.post(`${API_URL}/register`, {
+      const { data } = await axios.post(`/register`, {
         name,
         email,
         password
       });
 
       // Navigate to home screen after successful signup
-      navigation.navigate('Home');
+      navigation.navigate({OCRScreen})
 
     } catch (error) {
       let errorMessage = 'Signup failed';

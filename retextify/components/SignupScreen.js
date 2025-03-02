@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
-import { Alert, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { 
+  Alert, 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  StyleSheet, 
+  ActivityIndicator,
+  Platform 
+} from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = Platform.OS === 'android' 
+  ? 'http://10.0.2.2:5000/api'  // Android Emulator
+  : 'http://localhost:5000/api'; // iOS & Metro Bundler
 
 const SignupScreen = () => {
   const navigation = useNavigation();
@@ -21,17 +32,25 @@ const SignupScreen = () => {
     try {
       setLoading(true);
 
-      const { data } = await axios.post(`/register`, {
+      console.log('Sending signup request:', { name, email, password });
+
+      const response = await axios.post(`/register`, {
         name,
         email,
-        password
+        password,
       });
 
-      // Navigate to home screen after successful signup
-      navigation.navigate({OCRScreen})
+      console.log('Signup Success:', response.data);
+
+      Alert.alert('Success', 'Signup successful!');
+
+      // Navigate to OCRScreen after successful signup
+      navigation.navigate('OCRScreen'); 
 
     } catch (error) {
-      let errorMessage = 'Signup failed';
+      console.log('Signup Error:', error.response ? error.response.data : error.message);
+      
+      let errorMessage = 'Signup failed. Please try again.';
       if (error.response) {
         errorMessage = error.response.data.message || errorMessage;
       }
@@ -43,6 +62,7 @@ const SignupScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.heading}>Sign Up</Text>
       <TextInput
         placeholder="Name"
         value={name}
@@ -72,9 +92,11 @@ const SignupScreen = () => {
         onPress={handleSignup}
         disabled={loading}
       >
-        <Text style={styles.signupButtonText}>
-          {loading ? 'Signing up...' : 'Sign Up'}
-        </Text>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.signupButtonText}>Sign Up</Text>
+        )}
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
         <Text style={styles.loginText}>
@@ -92,6 +114,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#121212', 
     padding: 20,
+  },
+  heading: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 20,
   },
   input: {
     width: '100%',

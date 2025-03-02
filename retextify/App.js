@@ -2,87 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+
+// Import Screens
 import LoginScreen from './components/LoginScreen';
 import SignupScreen from './components/SignupScreen';
 import ForgotPassword from './components/ForgotPassword';
-// import Home from './components/Home'; // Assuming there's a Home component
-// import AsyncStorage from '@react-native-async-storage/async-storage';
+import HomeScreen from './components/HomeScreen';
+import OCRScreen from './components/OCRScreen';
 
 const Stack = createStackNavigator();
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [userToken, setUserToken] = useState(null);
-// ```javascript
-// import React, { useState, useEffect } from 'react';
-// import { ActivityIndicator } from 'react-native';
-// import { NavigationContainer } from '@react-navigation/native';
-// import { createStackNavigator } from '@react-navigation/stack';
-// import LoginScreen from './components/LoginScreen';
-// import SignupScreen from './components/SignupScreen';
-// import ForgotPassword from './components/ForgotPassword';
-// import Home from './components/Home';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// const Stack = createStackNavigator();
-
-// const App = () => {
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [userToken, setUserToken] = useState(null);
-
-//   const checkLoginStatus = async () => {
-//     try {
-//       const token = await AsyncStorage.getItem('userToken');
-//       setUserToken(token);
-//     } catch (error) {
-//       console.error(error);
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     checkLoginStatus();
-//   }, []);
-
-//   if (isLoading) {
-//     return <ActivityIndicator size="large" color="#FF5722" />;
-//   }
-
-//   return (
-//     <NavigationContainer>
-//       <Stack.Navigator>
-//         {userToken ? (
-//           <>
-//             <Stack.Screen name="Home" component={Home} />
-//           </>
-//         ) : (
-//           <>
-//             <Stack.Screen name="Login" component={LoginScreen} />
-//             <Stack.Screen name="Signup" component={SignupScreen} />
-//             <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-//           </>
-//         )}
-//       </Stack.Navigator>
-//     </NavigationContainer>
-//   );
-// };
-
-// export default App;
-// ```
-  const checkLoginStatus = async () => {
-    try {
-      const token = await AsyncStorage.getItem('userToken');
-      setUserToken(token);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Replaced userToken logic
 
   useEffect(() => {
-    checkLoginStatus();
+    // Simulating an API call or authentication check
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1500); // Simulating a loading delay
   }, []);
 
   if (isLoading) {
@@ -91,15 +29,17 @@ const App = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        {userToken ? (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {isAuthenticated ? (
           <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            {/* Add other protected routes he bre */}
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="OCRScreen" component={OCRScreen} />
           </>
         ) : (
           <>
-            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Login">
+              {(props) => <LoginScreen {...props} setIsAuthenticated={setIsAuthenticated} />}
+            </Stack.Screen>
             <Stack.Screen name="Signup" component={SignupScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
           </>

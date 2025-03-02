@@ -27,7 +27,7 @@ const LoginScreen = () => {
       });
 
       // Navigate to main app screen after successful login
-      navigation.navigate('Home');
+      navigation.navigate({HomeScreen});
 
     } catch (error) {
       let errorMessage = 'Login failed';

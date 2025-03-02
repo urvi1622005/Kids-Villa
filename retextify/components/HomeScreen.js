@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, FlatList, ScrollView, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Camera } from "lucide-react-native";
 import { motion } from "framer-motion";
 import Carousel from "react-native-snap-carousel";
 
@@ -39,8 +38,7 @@ const HomeScreen = () => {
           className="bg-blue-500 p-4 mt-4 rounded-2xl flex-row items-center justify-center shadow-lg"
           onPress={() => navigation.navigate("Scanner")}
         >
-          <Camera color="white" size={24} />
-          <Text className="text-white text-lg font-semibold ml-2">Scan Document</Text>
+          <Text className="text-white text-lg font-semibold">Scan Document</Text>
         </TouchableOpacity>
       </motion.View>
       

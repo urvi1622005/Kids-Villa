@@ -13,9 +13,9 @@ const HomeScreen = () => {
   ];
 
   const sliderImages = [
-    { id: "1", src: require("../assets/slide1.png") },
-    { id: "2", src: require("../assets/slide2.png") },
-    { id: "3", src: require("../assets/slide3.png") },
+    { id: "1", src: require("../assets/logo.png") },
+    { id: "2", src: require("../assets/logo.png") },
+    { id: "3", src: require("../assets/logo.png") },
   ];
 
   return (

@@ -11,13 +11,16 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../AuthContext';  // Import Auth Context
 
 const API_URL = Platform.OS === 'android' 
   ? 'http://10.0.2.2:5000/api'  // Android Emulator
   : 'http://localhost:5000/api'; // iOS & Metro Bundler
 
 const SignupScreen = () => {
+  const { setIsAuthenticated } = useAuth();  // Get authentication setter
   const navigation = useNavigation();
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,31 +28,20 @@ const SignupScreen = () => {
 
   const handleSignup = async () => {
     if (!name || !email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
 
     try {
       setLoading(true);
 
-      console.log('Sending signup request:', { name, email, password });
+      const response = await axios.post(`/register`, { name, email, password });
 
-      const response = await axios.post(`/register`, {
-        name,
-        email,
-        password,
-      });
-
-      console.log('Signup Success:', response.data);
-
-      Alert.alert('Success', 'Signup successful!');
-
-      // Navigate to OCRScreen after successful signup
-      navigation.navigate('OCRScreen'); 
+      Alert.alert('Success', 'Signup successful! Redirecting...');
+      setIsAuthenticated(true);  // Set user as authenticated
+      navigation.replace('OCRScreen');  // Navigate to OCRScreen
 
     } catch (error) {
-      console.log('Signup Error:', error.response ? error.response.data : error.message);
-      
       let errorMessage = 'Signup failed. Please try again.';
       if (error.response) {
         errorMessage = error.response.data.message || errorMessage;

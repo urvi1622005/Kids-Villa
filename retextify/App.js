@@ -42,11 +42,12 @@ const MainNavigator = () => {
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+            <Stack.Screen name="OCRScreen" component={OCRScreen} />
           </>
         ) : (
           // Main App Screens (After Login)
           <>
-            <Stack.Screen name="OCRScreen" component={OCRScreen} />
+            
           </>
         )}
       </Stack.Navigator>

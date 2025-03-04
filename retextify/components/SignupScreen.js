@@ -7,11 +7,16 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   ActivityIndicator,
-  Platform 
+  Platform,
+  KeyboardAvoidingView,
+  ScrollView,
+  Animated
 } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../AuthContext';  // Import Auth Context
+import { useAuth } from './AuthContext';  // Import Auth Context
+import { LinearGradient } from 'expo-linear-gradient';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const API_URL = Platform.OS === 'android' 
   ? 'http://10.0.2.2:5000/api'  // Android Emulator
@@ -25,10 +30,17 @@ const SignupScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const fadeAnim = useState(new Animated.Value(0))[0];
 
   const handleSignup = async () => {
     if (!name || !email || !password) {
       Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
+
+    if (!checked) {
+      Alert.alert('Error', 'Please agree to the terms and conditions.');
       return;
     }
 
@@ -39,7 +51,8 @@ const SignupScreen = () => {
 
       Alert.alert('Success', 'Signup successful! Redirecting...');
       setIsAuthenticated(true);  // Set user as authenticated
-      navigation.replace('OCRScreen');  // Navigate to OCRScreen
+      navigation.navigate('OCRScreen');
+      // Navigate to OCRScreen
 
     } catch (error) {
       let errorMessage = 'Signup failed. Please try again.';
@@ -52,83 +65,154 @@ const SignupScreen = () => {
     }
   };
 
+  const fadeIn = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  React.useEffect(() => {
+    fadeIn();
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Sign Up</Text>
-      <TextInput
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
-        placeholderTextColor="#bbb"
-      />
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        style={styles.input}
-        placeholderTextColor="#bbb"
-      />
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-        placeholderTextColor="#bbb"
-      />
-      <TouchableOpacity
-        style={styles.signupButton}
-        onPress={handleSignup}
-        disabled={loading}
+    <LinearGradient
+      colors={['#1A1A1A', '#121212']}
+      style={styles.container}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
       >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.signupButtonText}>Sign Up</Text>
-        )}
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.loginText}>
-          Already have an account? <Text style={{ color: '#FF5722' }}>Login</Text>
-        </Text>
-      </TouchableOpacity>
-    </View>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>
+            <Text style={styles.heading}>Create Account</Text>
+            <View style={styles.inputContainer}>
+              <Icon name="person" size={20} color="#FF5722" style={styles.icon} />
+              <TextInput
+                placeholder="Name"
+                value={name}
+                onChangeText={setName}
+                style={styles.input}
+                placeholderTextColor="#bbb"
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Icon name="email" size={20} color="#FF5722" style={styles.icon} />
+              <TextInput
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Icon name="lock" size={20} color="#FF5722" style={styles.icon} />
+              <TextInput
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                style={styles.input}
+                placeholderTextColor="#bbb"
+              />
+            </View>
+            <View style={styles.checkboxContainer}>
+              <TouchableOpacity onPress={() => setChecked(!checked)} style={styles.checkbox}>
+                {checked ? (
+                  <Icon name="check-box" size={24} color="#FF5722" />
+                ) : (
+                  <Icon name="check-box-outline-blank" size={24} color="#bbb" />
+                )}
+              </TouchableOpacity>
+              <Text style={styles.checkboxText}>I agree to the terms and conditions</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.signupButton}
+              onPress={handleSignup}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.signupButtonText}>Sign Up</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.loginText}>
+                Already have an account? <Text style={{ color: '#FF5722' }}>Login</Text>
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#121212', 
+  },
+  formContainer: {
     padding: 20,
+    borderRadius: 15,
+    backgroundColor: '#1E1E1E',
+    marginHorizontal: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
   },
   heading: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 20,
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 10,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  icon: {
+    marginRight: 10,
   },
   input: {
-    width: '100%',
-    backgroundColor: '#2A2A2A',
+    flex: 1,
     color: 'white',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#333',
+    paddingVertical: 12,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  checkbox: {
+    marginRight: 10,
+  },
+  checkboxText: {
+    color: '#bbb',
+    fontSize: 14,
   },
   signupButton: {
     backgroundColor: '#FF5722',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
+    paddingVertical: 15,
     borderRadius: 10,
-    width: '100%',
     alignItems: 'center',
     marginTop: 10,
   },
@@ -141,6 +225,7 @@ const styles = StyleSheet.create({
     color: '#bbb',
     fontSize: 14,
     marginTop: 15,
+    textAlign: 'center',
   },
 });
 

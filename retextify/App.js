@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { AuthProvider } from '../components/AuthContext';
+import { AuthProvider } from './components/AuthContext';
 
-import { useAuth } from '../components/AuthContext';
+import { useAuth } from './components/AuthContext.js';
 
 // Import Screens
 import LoginScreen from './components/LoginScreen';
@@ -51,6 +51,7 @@ const MainNavigator = () => {
         )}
       </Stack.Navigator>
     </NavigationContainer>
+    
   );
 };
 

@@ -23,6 +23,7 @@ const API_URL = Platform.OS === 'android'
   : 'http://localhost:5000/api'; // iOS & Metro Bundler
 
 const SignupScreen = () => {
+
   const { setIsAuthenticated } = useAuth();  // Get authentication setter
   const navigation = useNavigation();
 
@@ -34,23 +35,27 @@ const SignupScreen = () => {
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   const handleSignup = async () => {
+    console.log("this is debug");
     if (!name || !email || !password) {
+      console.log("name");
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
 
     if (!checked) {
+      console.log("error mtt de");
       Alert.alert('Error', 'Please agree to the terms and conditions.');
       return;
     }
 
     try {
       setLoading(true);
-
+      console.log("here is loading done");
       const response = await axios.post(`/register`, { name, email, password });
-
+      console.log("waiting done ");
       Alert.alert('Success', 'Signup successful! Redirecting...');
-      setIsAuthenticated(true);  // Set user as authenticated
+      // setIsAuthenticated(true);  // Set user as authenticated
+      console.log("hii i am here");
       navigation.navigate('OCRScreen');
       // Navigate to OCRScreen
 
@@ -69,7 +74,7 @@ const SignupScreen = () => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1000,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   };
 
@@ -135,7 +140,7 @@ const SignupScreen = () => {
             <TouchableOpacity
               style={styles.signupButton}
               onPress={handleSignup}
-              disabled={loading}
+              // disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />
@@ -169,10 +174,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1E1E',
     marginHorizontal: 20,
     elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 2,
+    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.8)',
   },
   heading: {
     fontSize: 28,

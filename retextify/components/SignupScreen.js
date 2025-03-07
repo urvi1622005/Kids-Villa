@@ -91,7 +91,10 @@ const SignupScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
       >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
           <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>
             <Text style={styles.heading}>Create Account</Text>
             <View style={styles.inputContainer}>
@@ -140,7 +143,7 @@ const SignupScreen = () => {
             <TouchableOpacity
               style={styles.signupButton}
               onPress={handleSignup}
-              // disabled={loading}
+              disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />
@@ -162,19 +165,26 @@ const SignupScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex:1,
+    justifyContent: 'center', // Center vertically
+    alignItems: 'center', // Center horizontally
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: 'center', // Center vertically
+    alignItems: 'center', // Center horizontally
+    width: '100%', // Ensure it takes full width
   },
   formContainer: {
-    padding: 20,
+    width: '90%', // 90% of the parent width
+    maxWidth: 700,// Maximum width for larger screens
+    padding: 40,
     borderRadius: 15,
     backgroundColor: '#1E1E1E',
-    marginHorizontal: 20,
-    elevation: 5,
-    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.8)',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
   },
   heading: {
     fontSize: 28,
@@ -232,3 +242,4 @@ const styles = StyleSheet.create({
 });
 
 export default SignupScreen;
+

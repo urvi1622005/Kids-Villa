@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { 
   View, Image, Alert, ActivityIndicator, Text, TextInput, ScrollView, 
-  TouchableOpacity, StyleSheet, Animated 
+  TouchableOpacity, StyleSheet, Animated, Dimensions, Modal, TouchableWithoutFeedback, Keyboard 
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Tesseract from "tesseract.js";
 import { useRoute, useNavigation, useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import * as Clipboard from 'expo-clipboard';
+import * as FileSystem from 'expo-file-system';
+
+const { width, height } = Dimensions.get("window");
 
 const OCRScreen = () => {
   const route = useRoute();
@@ -18,6 +22,7 @@ const OCRScreen = () => {
   const [extractedText, setExtractedText] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [customText, setCustomText] = useState("");
+  const [isImageModalVisible, setImageModalVisible] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
@@ -85,6 +90,17 @@ const OCRScreen = () => {
     navigation.navigate("DocumentScanner");
   };
 
+  const copyToClipboard = async () => {
+    await Clipboard.setStringAsync(customText);
+    Alert.alert("Copied", "Text copied to clipboard!");
+  };
+
+  const saveTextToFile = async () => {
+    const fileUri = FileSystem.documentDirectory + "extracted_text.txt";
+    await FileSystem.writeAsStringAsync(fileUri, customText);
+    Alert.alert("Saved", `Text saved to ${fileUri}`);
+  };
+
   const fadeIn = () => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -106,23 +122,27 @@ const OCRScreen = () => {
         <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
           <Text style={styles.title}>📄 OCR & Template Formatting</Text>
 
-          <TouchableOpacity style={styles.actionButton} onPress={navigateToDocumentScanner}>
-            <Icon name="document-scanner" size={24} color="#fff" style={styles.buttonIcon} />
-            <Text style={styles.buttonText}>Scan Document</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.actionButton} onPress={navigateToDocumentScanner}>
+              <Icon name="document-scanner" size={24} color="#fff" style={styles.buttonIcon} />
+              <Text style={styles.buttonText}>Scan Document</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.actionButton} 
-            onPress={() => navigation.navigate("TemplateChooser", { text: extractedText })}
-          >
-            <Icon name="format-align-left" size={24} color="#fff" style={styles.buttonIcon} />
-            <Text style={styles.buttonText}>Choose Template</Text>
-          </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.actionButton} 
+              onPress={() => navigation.navigate("TemplateChooser", { text: extractedText })}
+            >
+              <Icon name="format-align-left" size={24} color="#fff" style={styles.buttonIcon} />
+              <Text style={styles.buttonText}>Choose Template</Text>
+            </TouchableOpacity>
+          </View>
 
           {image && (
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: image }} style={styles.image} />
-            </View>
+            <TouchableOpacity onPress={() => setImageModalVisible(true)}>
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: image }} style={styles.image} />
+              </View>
+            </TouchableOpacity>
           )}
 
           {loading && (
@@ -143,6 +163,16 @@ const OCRScreen = () => {
                 placeholder="Extracted text will appear here..."
                 placeholderTextColor="#bbb"
               />
+              <View style={styles.textActions}>
+                <TouchableOpacity style={styles.textActionButton} onPress={copyToClipboard}>
+                  <Icon name="content-copy" size={24} color="#fff" />
+                  <Text style={styles.textActionButtonText}>Copy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.textActionButton} onPress={saveTextToFile}>
+                  <Icon name="save" size={24} color="#fff" />
+                  <Text style={styles.textActionButtonText}>Save</Text>
+                </TouchableOpacity>
+              </View>
             </>
           ) : null}
 
@@ -192,6 +222,19 @@ const OCRScreen = () => {
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
+
+      {/* Image Preview Modal */}
+      <Modal
+        visible={isImageModalVisible}
+        transparent={true}
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setImageModalVisible(false)}>
+          <View style={styles.modalContainer}>
+            <Image source={{ uri: image }} style={styles.fullScreenImage} />
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </LinearGradient>
   );
 };
@@ -203,6 +246,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
+    paddingVertical: 20,
   },
   contentContainer: {
     padding: 20,
@@ -214,6 +258,11 @@ const styles = StyleSheet.create({
     color: "white",
     marginBottom: 20,
     textAlign: "center",
+    fontFamily: "Roboto-Bold",
+  },
+  buttonContainer: {
+    width: "100%",
+    alignItems: "center",
   },
   actionButton: {
     flexDirection: "row",
@@ -221,9 +270,14 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginVertical: 10,
-    width: "90%",
+    width: "80%",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 5,
   },
   buttonIcon: {
     marginRight: 10,
@@ -232,6 +286,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "white",
+    fontFamily: "Roboto-Medium",
   },
   imageContainer: {
     borderWidth: 2,
@@ -241,8 +296,8 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   image: {
-    width: 200,
-    height: 200,
+    width: width * 0.8,
+    height: height * 0.3,
     resizeMode: "contain",
     borderRadius: 10,
   },
@@ -254,12 +309,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#FF5722",
     marginTop: 10,
+    fontFamily: "Roboto-Regular",
   },
   subTitle: {
     fontSize: 20,
     fontWeight: "bold",
     color: "white",
     marginVertical: 10,
+    fontFamily: "Roboto-Bold",
   },
   textArea: {
     width: "90%",
@@ -271,6 +328,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "white",
     backgroundColor: "#2A2A2A",
+    fontFamily: "Roboto-Regular",
+  },
+  textActions: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "90%",
+    marginVertical: 10,
+  },
+  textActionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#007AFF",
+    padding: 10,
+    borderRadius: 8,
+    marginHorizontal: 5,
+  },
+  textActionButtonText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "white",
+    marginLeft: 5,
+    fontFamily: "Roboto-Medium",
   },
   templateContainer: {
     flexDirection: "row",
@@ -284,6 +363,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     width: "30%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 5,
   },
   selectedTemplate: {
     backgroundColor: "#0056b3",
@@ -293,6 +377,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "white",
     marginTop: 5,
+    fontFamily: "Roboto-Medium",
   },
   pickImageButton: {
     flexDirection: "row",
@@ -300,9 +385,25 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginVertical: 10,
-    width: "90%",
+    width: "80%",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+  },
+  fullScreenImage: {
+    width: width * 0.9,
+    height: height * 0.7,
+    resizeMode: "contain",
   },
 });
 

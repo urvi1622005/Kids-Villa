@@ -23,6 +23,7 @@ const OCRScreen = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [customText, setCustomText] = useState("");
   const [isImageModalVisible, setImageModalVisible] = useState(false);
+  const [isSidebarVisible, setSidebarVisible] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
@@ -118,10 +119,32 @@ const OCRScreen = () => {
       colors={["#1A1A1A", "#121212"]}
       style={styles.container}
     >
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => setSidebarVisible(!isSidebarVisible)}>
+          <Icon name="menu" size={30} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>OCR & Template Formatting</Text>
+      </View>
+
+      {isSidebarVisible && (
+        <View style={styles.sidebar}>
+          <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("Home")}>
+            <Icon name="home" size={24} color="#fff" />
+            <Text style={styles.sidebarText}>Home</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("Settings")}>
+            <Icon name="settings" size={24} color="#fff" />
+            <Text style={styles.sidebarText}>Settings</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("History")}>
+            <Icon name="history" size={24} color="#fff" />
+            <Text style={styles.sidebarText}>History</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
-          <Text style={styles.title}>📄 OCR & Template Formatting</Text>
-
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.actionButton} onPress={navigateToDocumentScanner}>
               <Icon name="document-scanner" size={24} color="#fff" style={styles.buttonIcon} />
@@ -243,6 +266,42 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#1A1A1A",
+    borderBottomWidth: 1,
+    borderBottomColor: "#333",
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "white",
+    marginLeft: 20,
+  },
+  sidebar: {
+    position: "absolute",
+    top: 80,
+    left: 0,
+    width: 200,
+    height: "100%",
+    backgroundColor: "#1A1A1A",
+    padding: 20,
+    zIndex: 1000,
+    borderRightWidth: 1,
+    borderRightColor: "#333",
+  },
+  sidebarItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  sidebarText: {
+    fontSize: 16,
+    color: "white",
+    marginLeft: 10,
+  },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
@@ -251,14 +310,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 20,
     alignItems: "center",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 20,
-    textAlign: "center",
-    fontFamily: "Roboto-Bold",
   },
   buttonContainer: {
     width: "100%",

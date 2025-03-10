@@ -1,4 +1,7 @@
 import express from 'express';
+import geminiRoutes from './routes/geminiRoutes.js';
+app.use('/api/gemini', geminiRoutes);
+
 import { 
   registerUser,
   loginUser,

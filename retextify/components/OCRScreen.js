@@ -1,24 +1,37 @@
 import React, { useState, useEffect } from "react";
-import { 
-  View, Image, Alert, ActivityIndicator, Text, TextInput, ScrollView, 
-  TouchableOpacity, StyleSheet, Animated, Dimensions, Modal, TouchableWithoutFeedback, Keyboard 
+import {
+  View,
+  Image,
+  Alert,
+  ActivityIndicator,
+  Text,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+  Dimensions,
+  Modal,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Tesseract from "tesseract.js";
 import { useRoute, useNavigation, useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import * as Clipboard from 'expo-clipboard';
-import * as FileSystem from 'expo-file-system';
+import * as Clipboard from "expo-clipboard";
+import * as FileSystem from "expo-file-system";
 
 const { width, height } = Dimensions.get("window");
 
 const OCRScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { imageUri: initialImage } = route.params || {};  
+  const { imageUri: initialImage } = route.params || {};
   const [image, setImage] = useState(initialImage);
   const [loading, setLoading] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
   const [extractedText, setExtractedText] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [customText, setCustomText] = useState("");
@@ -41,6 +54,14 @@ const OCRScreen = () => {
   );
 
   const pickImage = async () => {
+    setImageLoading(true);
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission Denied", "Please allow access to your photo library to pick images.");
+      setImageLoading(false);
+      return;
+    }
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -49,12 +70,16 @@ const OCRScreen = () => {
 
     if (!result.canceled) {
       setImage(result.assets[0].uri);
-      extractTextFromImage(result.assets[0].uri);
+      await extractTextFromImage(result.assets[0].uri);
     }
+    setImageLoading(false);
   };
 
   const extractTextFromImage = async (imageUri) => {
-    if (!imageUri) return;
+    if (!imageUri) {
+      Alert.alert("Error", "No image selected.");
+      return;
+    }
 
     setLoading(true);
     setExtractedText("");
@@ -66,7 +91,7 @@ const OCRScreen = () => {
       setCustomText(text || "No text detected.");
     } catch (error) {
       console.error("OCR Error:", error);
-      Alert.alert("Error", "Failed to extract text.");
+      Alert.alert("Error", "Failed to extract text. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -106,7 +131,7 @@ const OCRScreen = () => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1000,
-      useNativeDriver: true,
+      useNativeDriver: false, // Set to false
     }).start();
   };
 
@@ -115,32 +140,36 @@ const OCRScreen = () => {
   }, []);
 
   return (
-    <LinearGradient
-      colors={["#1A1A1A", "#121212"]}
-      style={styles.container}
-    >
+    <LinearGradient colors={["#1A1A1A", "#121212"]} style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Icon name="arrow-back" size={30} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>OCR & Template Formatting</Text>
         <TouchableOpacity onPress={() => setSidebarVisible(!isSidebarVisible)}>
           <Icon name="menu" size={30} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>OCR & Template Formatting</Text>
       </View>
 
       {isSidebarVisible && (
-        <View style={styles.sidebar}>
-          <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("Home")}>
-            <Icon name="home" size={24} color="#fff" />
-            <Text style={styles.sidebarText}>Home</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("Settings")}>
-            <Icon name="settings" size={24} color="#fff" />
-            <Text style={styles.sidebarText}>Settings</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("History")}>
-            <Icon name="history" size={24} color="#fff" />
-            <Text style={styles.sidebarText}>History</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableWithoutFeedback onPress={() => setSidebarVisible(false)}>
+          <View style={styles.sidebarOverlay}>
+            <View style={styles.sidebar}>
+              <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("Home")}>
+                <Icon name="home" size={24} color="#fff" />
+                <Text style={styles.sidebarText}>Home</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("Settings")}>
+                <Icon name="settings" size={24} color="#fff" />
+                <Text style={styles.sidebarText}>Settings</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("History")}>
+                <Icon name="history" size={24} color="#fff" />
+                <Text style={styles.sidebarText}>History</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
       )}
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -151,8 +180,8 @@ const OCRScreen = () => {
               <Text style={styles.buttonText}>Scan Document</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.actionButton} 
+            <TouchableOpacity
+              style={styles.actionButton}
               onPress={() => navigation.navigate("TemplateChooser", { text: extractedText })}
             >
               <Icon name="format-align-left" size={24} color="#fff" style={styles.buttonIcon} />
@@ -174,7 +203,7 @@ const OCRScreen = () => {
               <Text style={styles.loadingText}>Extracting Text...</Text>
             </View>
           )}
-          
+
           {!loading && extractedText ? (
             <>
               <Text style={styles.subTitle}>Extracted Text</Text>
@@ -194,6 +223,16 @@ const OCRScreen = () => {
                 <TouchableOpacity style={styles.textActionButton} onPress={saveTextToFile}>
                   <Icon name="save" size={24} color="#fff" />
                   <Text style={styles.textActionButtonText}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.textActionButton}
+                  onPress={() => {
+                    setExtractedText("");
+                    setCustomText("");
+                  }}
+                >
+                  <Icon name="clear" size={24} color="#fff" />
+                  <Text style={styles.textActionButtonText}>Clear</Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -239,9 +278,15 @@ const OCRScreen = () => {
             </>
           ) : null}
 
-          <TouchableOpacity style={styles.pickImageButton} onPress={pickImage}>
-            <Icon name="image" size={24} color="#fff" style={styles.buttonIcon} />
-            <Text style={styles.buttonText}>Pick Another Image</Text>
+          <TouchableOpacity style={styles.pickImageButton} onPress={pickImage} disabled={imageLoading}>
+            {imageLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Icon name="image" size={24} color="#fff" style={styles.buttonIcon} />
+                <Text style={styles.buttonText}>Pick Another Image</Text>
+              </>
+            )}
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
@@ -258,6 +303,25 @@ const OCRScreen = () => {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+      {/* Navigation Buttons */}
+      <View style={styles.navigationButtons}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate("Home")}
+        >
+          <Icon name="home" size={24} color="#fff" />
+          <Text style={styles.buttonText}>Go to Home</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate("AIChatScreen", { extractedText })}
+        >
+          <Icon name="chat" size={24} color="#fff" />
+          <Text style={styles.buttonText}>Chat with AI</Text>
+        </TouchableOpacity>
+      </View>
     </LinearGradient>
   );
 };
@@ -279,6 +343,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "white",
     marginLeft: 20,
+  },
+  sidebarOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 999,
   },
   sidebar: {
     position: "absolute",
@@ -455,6 +528,17 @@ const styles = StyleSheet.create({
     width: width * 0.9,
     height: height * 0.7,
     resizeMode: "contain",
+  },
+  navigationButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: 10,
+    backgroundColor: "#1A1A1A",
+    borderTopWidth: 1,
+    borderTopColor: "#333",
+  },
+  navButton: {
+    alignItems: "center",
   },
 });
 

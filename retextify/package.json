@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
+    "@react-native-async-storage/async-storage": "^2.1.2",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
@@ -24,6 +25,7 @@
     "node-fetch": "^3.3.2",
     "pptxgenjs": "^3.12.0",
     "rate-limit-redis": "^3.0.0",
+    "react-native-drawer-layout": "^4.1.1",
     "react-native-reanimated": "^3.17.1",
     "react-native-snap-carousel": "^4.0.0-beta.6",
     "react-native-web": "^0.19.13",

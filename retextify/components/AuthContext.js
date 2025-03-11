@@ -9,13 +9,21 @@ export const AuthProvider = ({ children }) => {
 
   // Update localStorage when authentication state changes
   useEffect(() => {
-    localStorage.setItem("isAuthenticated", isAuthenticated);
+    try {
+      localStorage.setItem("isAuthenticated", isAuthenticated);
+    } catch (error) {
+      console.error("Failed to update localStorage:", error);
+    }
   }, [isAuthenticated]);
 
   const login = () => setIsAuthenticated(true);
   const logout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem("isAuthenticated");
+    try {
+      localStorage.removeItem("isAuthenticated");
+    } catch (error) {
+      console.error("Failed to remove item from localStorage:", error);
+    }
   };
 
   return (
@@ -25,4 +33,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};

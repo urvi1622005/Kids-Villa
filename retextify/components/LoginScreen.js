@@ -1,18 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { Alert, Animated, Easing, ActivityIndicator, Platform, KeyboardAvoidingView } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import {
+  Alert,
+  Animated,
+  ActivityIndicator,
+  Platform,
+  KeyboardAvoidingView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Dimensions,
+} from 'react-native';
 import axios from 'axios';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthContext } from '../context/AuthContext';
 
 const { width, height } = Dimensions.get('window');
-const API_URL = Platform.OS === 'android' 
-  ? 'http://10.0.2.2:5000/api'  // Android Emulator
-  : 'http://localhost:5000/api'; 
+const API_URL =
+  Platform.OS === 'android'
+    ? 'http://10.0.2.2:5000/api' // Android Emulator
+    : 'http://localhost:5000/api'; // iOS Emulator or Physical Device
 
 const LoginScreen = () => {
   const navigation = useNavigation();
+  const { login } = useContext(AuthContext); // Use AuthContext for login
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,6 +42,24 @@ const LoginScreen = () => {
       shakeForm();
     }
   }, [error]);
+
+  useEffect(() => {
+    checkRememberMe();
+  }, []);
+
+  const checkRememberMe = async () => {
+    try {
+      const savedEmail = await AsyncStorage.getItem('email');
+      const savedPassword = await AsyncStorage.getItem('password');
+      if (savedEmail && savedPassword) {
+        setEmail(savedEmail);
+        setPassword(savedPassword);
+        setRememberMe(true);
+      }
+    } catch (error) {
+      console.error('Failed to load saved credentials:', error);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -42,6 +76,15 @@ const LoginScreen = () => {
         password,
       });
 
+      if (rememberMe) {
+        await AsyncStorage.setItem('email', email);
+        await AsyncStorage.setItem('password', password);
+      } else {
+        await AsyncStorage.removeItem('email');
+        await AsyncStorage.removeItem('password');
+      }
+
+      login(data.user); // Update authentication state using AuthContext
       navigation.navigate('HomeScreen');
     } catch (error) {
       let errorMessage = 'Login failed';
@@ -78,12 +121,7 @@ const LoginScreen = () => {
       >
         <Image source={require('../assets/logo.jpg')} style={styles.logo} />
 
-        <Animated.View
-          style={[
-            styles.loginBox,
-            { transform: [{ translateX: shakeAnimation }] },
-          ]}
-        >
+        <Animated.View style={[styles.loginBox, { transform: [{ translateX: shakeAnimation }] }]}>
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>Login to continue</Text>
 
@@ -134,15 +172,8 @@ const LoginScreen = () => {
             <Text style={styles.forgotText}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <LinearGradient
-              colors={['#FF5722', '#FF9800']}
-              style={styles.gradientButton}
-            >
+          <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
+            <LinearGradient colors={['#FF5722', '#FF9800']} style={styles.gradientButton}>
               {loading ? (
                 <ActivityIndicator color="white" />
               ) : (
@@ -329,6 +360,7 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontFamily: 'Roboto-Regular',
   },
+
 });
 
 export default LoginScreen;

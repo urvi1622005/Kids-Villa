@@ -3,7 +3,16 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
-import geminiRoutes from './routes/geminiRoutes.js'; // ✅ Import Gemini routes
+import geminiRoutes from './routes/geminiRoutes.js';
+
+// Fix for util.inherits issue
+// import util from 'util';
+
+// if (!util.inherits) {
+//   util.inherits = function (ctor, superCtor) {
+//     Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
+//   };
+// }
 
 dotenv.config();
 
@@ -31,7 +40,12 @@ mongoose
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/gemini', geminiRoutes); // ✅ Add this line
+app.use('/api/gemini', geminiRoutes);
+
+// Default route
+app.get('/', (req, res) => {
+  res.send('🚀 Server is running!');
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

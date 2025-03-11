@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import { AuthProvider, useAuth } from "./components/AuthContext"; 
+import { AuthProvider, useAuth } from "./components/AuthContext";
 
 // Import Screens
 import LoginScreen from "./components/LoginScreen";
@@ -15,7 +15,7 @@ import AIChatScreen from "./components/AIChatScreen"; // ✅ AI Chat Screen
 const Stack = createStackNavigator();
 
 const MainNavigator = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth(); // Use the context
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -46,9 +46,9 @@ const MainNavigator = () => {
         ) : (
           // Show app screens if the user is authenticated
           <>
-            {/* <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="OCRScreen" component={OCRScreen} />
-            <Stack.Screen name="AIChat" component={AIChatScreen} /> */}
+            <Stack.Screen name="AIChat" component={AIChatScreen} />
           </>
         )}
       </Stack.Navigator>

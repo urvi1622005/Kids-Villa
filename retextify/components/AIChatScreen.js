@@ -30,7 +30,7 @@ export default function AIChatScreen() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/gemini/generate", {
+      const res = await fetch("http:// 172.20.10.3:5000/api/gemini/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: input }),
@@ -64,9 +64,9 @@ export default function AIChatScreen() {
         <TextInput
           value={input}
           onChangeText={(text) => {
-            console.log("Input changed:", text); // Log input changes
+            console.log("Input changed:", text); 
             setInput(text);
-            setError(""); // Clear error when user types
+            setError(""); 
           }}
           placeholder="Type your question..."
           placeholderTextColor="#999"
@@ -78,7 +78,7 @@ export default function AIChatScreen() {
           <Button
             title="Generate"
             onPress={() => {
-              console.log("Generate button pressed"); // Log button press
+              console.log("Generate button pressed"); 
               fetchAIResponse();
             }}
             disabled={loading}

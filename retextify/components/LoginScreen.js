@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Alert,
   Animated,
@@ -18,7 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AuthContext } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 const { width, height } = Dimensions.get('window');
 const API_URL =
@@ -28,7 +28,7 @@ const API_URL =
 
 const LoginScreen = () => {
   const navigation = useNavigation();
-  const { login } = useContext(AuthContext); // Use AuthContext for login
+  const { login } = useAuth(); // Use the useAuth hook
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -84,7 +84,7 @@ const LoginScreen = () => {
         await AsyncStorage.removeItem('password');
       }
 
-      login(data.user); // Update authentication state using AuthContext
+      login(data.user); // Use the login function from AuthContext
       navigation.navigate('HomeScreen');
     } catch (error) {
       let errorMessage = 'Login failed';
@@ -360,7 +360,6 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontFamily: 'Roboto-Regular',
   },
-
 });
 
 export default LoginScreen;

@@ -30,7 +30,7 @@ export default function AIChatScreen() {
     setError("");
 
     try {
-      const res = await fetch("http:// 172.20.10.3:5000/api/gemini/generate", {
+      const res = await fetch("http://172.20.10.3:5000/api/gemini/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: input }),

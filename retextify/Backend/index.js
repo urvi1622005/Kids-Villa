@@ -5,15 +5,6 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import geminiRoutes from './routes/geminiRoutes.js';
 
-// Fix for util.inherits issue
-// import util from 'util';
-
-// if (!util.inherits) {
-//   util.inherits = function (ctor, superCtor) {
-//     Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
-//   };
-// }
-
 dotenv.config();
 
 if (!process.env.MONGO_URI) {
@@ -22,8 +13,12 @@ if (!process.env.MONGO_URI) {
 }
 
 const app = express();
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"]
+}));
 
-app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 // Connect to MongoDB

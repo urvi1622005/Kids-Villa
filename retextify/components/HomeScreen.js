@@ -73,13 +73,15 @@ const HomeScreen = () => {
       renderDrawerContent={renderSidebar}
     >
       <ScrollView style={styles.container}>
-        {/* Header with Menu Button */}
+        {/* Header with Menu and Back Button */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => setIsSidebarOpen(true)}>
-            <Feather name="menu" size={24} color="#000" />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ cursor: 'pointer' }}>
+            <Feather name="arrow-left" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Document Scanner</Text>
-          <View style={{ width: 24 }} /> {/* Placeholder for alignment */}
+          <TouchableOpacity onPress={() => setIsSidebarOpen(true)} style={{ cursor: 'pointer' }}>
+            <Feather name="menu" size={24} color="#000" />
+          </TouchableOpacity>
         </View>
 
         {/* Image Carousel */}

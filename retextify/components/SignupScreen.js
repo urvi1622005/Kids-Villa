@@ -35,27 +35,20 @@ const SignupScreen = () => {
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   const handleSignup = async () => {
-    console.log("this is debug");
     if (!name || !email || !password) {
-      console.log("name");
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
 
     if (!checked) {
-      console.log("error mtt de");
       Alert.alert('Error', 'Please agree to the terms and conditions.');
       return;
     }
 
     try {
       setLoading(true);
-      console.log("here is loading done");
       const response = await axios.post(`/register`, { name, email, password });
-      console.log("waiting done ");
       Alert.alert('Success', 'Signup successful! Redirecting...');
-      // setIsAuthenticated(true);  // Set user as authenticated
-      console.log("hii i am here");
       navigation.navigate('OCRScreen');
       // Navigate to OCRScreen
 
@@ -176,10 +169,10 @@ const styles = StyleSheet.create({
     width: '100%', // Ensure it takes full width
   },
   formContainer: {
-    width: '90%', // 90% of the parent width
-    maxWidth: 700,// Maximum width for larger screens
-    padding: 40,
-    borderRadius: 15,
+    width: '90%',
+    maxWidth: 400,
+    padding: 30,
+    borderRadius: 20,
     backgroundColor: '#1E1E1E',
     elevation: 10,
     shadowColor: '#000',
@@ -197,9 +190,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#2A2A2A',
-    borderRadius: 10,
-    marginBottom: 15,
-    paddingHorizontal: 10,
+    borderRadius: 15,
+    marginBottom: 20,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: '#444',
   },
   icon: {
     marginRight: 10,
@@ -212,7 +207,11 @@ const styles = StyleSheet.create({
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 25,
+    padding: 5,
+    borderRadius: 10,
+    backgroundColor: '#2A2A2A',
+    alignSelf: 'flex-start',
   },
   checkbox: {
     marginRight: 10,
@@ -224,9 +223,14 @@ const styles = StyleSheet.create({
   signupButton: {
     backgroundColor: '#FF5722',
     paddingVertical: 15,
-    borderRadius: 10,
+    borderRadius: 15,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 20,
+    shadowColor: '#FF5722',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
   },
   signupButtonText: {
     color: 'white',

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, FlatList } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons"; // For the back button icon
 
 const TemplateChooser = ({ route }) => {
   const navigation = useNavigation();
@@ -80,6 +81,11 @@ const TemplateChooser = ({ route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color="#007AFF" />
+      </TouchableOpacity>
+
       <Text style={styles.title}>Choose a Template</Text>
       <View style={styles.categoryContainer}>
         {categories.map((category) => (
@@ -88,7 +94,9 @@ const TemplateChooser = ({ route }) => {
             style={[styles.categoryButton, selectedCategory === category && styles.selectedCategory]}
             onPress={() => setSelectedCategory(category)}
           >
-            <Text style={styles.categoryText}>{category}</Text>
+            <Text style={[styles.categoryText, selectedCategory === category && styles.selectedCategoryText]}>
+              {category}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -98,6 +106,7 @@ const TemplateChooser = ({ route }) => {
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.templateButton} onPress={() => handleTemplateSelection(item)}>
             <Text style={styles.templateText}>{item.name}</Text>
+            <Text style={styles.templateDescription}>{item.content}</Text>
           </TouchableOpacity>
         )}
       />
@@ -109,26 +118,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f9f9f9",
-    alignItems: "center",
     paddingTop: 20,
+    paddingHorizontal: 16,
+  },
+  backButton: {
+    position: "absolute",
+    top: 20,
+    left: 16,
+    zIndex: 1,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 20,
     color: "#333",
+    textAlign: "center",
   },
   categoryContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    marginBottom: 10,
+    marginBottom: 20,
   },
   categoryButton: {
-    backgroundColor: "#ddd",
+    backgroundColor: "#e0e0e0",
     padding: 10,
     margin: 5,
     borderRadius: 8,
+    minWidth: 100,
+    alignItems: "center",
   },
   selectedCategory: {
     backgroundColor: "#007AFF",
@@ -136,20 +154,31 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "black",
+    color: "#555",
+  },
+  selectedCategoryText: {
+    color: "#fff",
   },
   templateButton: {
-    backgroundColor: "#007AFF",
-    padding: 15,
+    backgroundColor: "#fff",
+    padding: 16,
     borderRadius: 10,
-    marginVertical: 5,
-    width: "90%",
-    alignItems: "center",
+    marginVertical: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   templateText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "white",
+    color: "#007AFF",
+    marginBottom: 8,
+  },
+  templateDescription: {
+    fontSize: 14,
+    color: "#666",
   },
 });
 

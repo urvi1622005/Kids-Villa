@@ -11,7 +11,8 @@ import ForgotPassword from "./components/ForgotPassword";
 import OCRScreen from "./components/OCRScreen";
 import HomeScreen from "./components/HomeScreen";
 import AIChatScreen from "./components/AIChatScreen"; // ✅ AI Chat Screen
-
+import TemplateChooser from "./components/TemplateChooser";
+import DocumentScanner from "./components/DocumentScanner";
 const Stack = createStackNavigator();
 
 const MainNavigator = () => {
@@ -42,6 +43,8 @@ const MainNavigator = () => {
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="OCRScreen" component={OCRScreen} />
             <Stack.Screen name="AIChat" component={AIChatScreen} />
+            <Stack.Screen name="DocumentScanner" component={DocumentScanner} />
+            <Stack.Screen name="TemplateChooser" component={TemplateChooser} />
           </>
         ) : (
           // Show app screens if the user is authenticated

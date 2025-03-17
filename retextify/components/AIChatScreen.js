@@ -11,15 +11,18 @@ import {
   Image,
   Animated,
   TouchableOpacity,
-  SafeAreaView, // Use SafeAreaView
+  SafeAreaView,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 export default function AIChatScreen() {
+  const navigation = useNavigation();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [fadeAnim] = useState(new Animated.Value(0));
+  const fadeAnim = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef();
 
   useEffect(() => {
@@ -28,14 +31,11 @@ export default function AIChatScreen() {
       duration: 500,
       useNativeDriver: true,
     }).start();
-  }, []); // Run only on initial mount
+  }, []);
 
   useEffect(() => {
-    // Scroll to end with a slight delay after content size changes
-    if (scrollViewRef.current) {
-      setTimeout(() => {
-        scrollViewRef.current.scrollToEnd({ animated: true });
-      }, 100);
+    if (messages.length > 0) {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
     }
   }, [messages]);
 
@@ -61,9 +61,7 @@ export default function AIChatScreen() {
         body: JSON.stringify({ prompt: input }),
       });
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! Status: ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
 
       const data = await res.json();
 
@@ -81,24 +79,31 @@ export default function AIChatScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#1e1e1e" }}>
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
+        {/* Header */}
         <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-          <Image
-            source={require("../assets/bot.jpg")}
-            style={styles.botIcon}
-          />
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Icon name="arrow-back" size={30} color="#fff" />
+          </TouchableOpacity>
+          <Image source={require("../assets/bot.jpg")} style={styles.botIcon} />
           <Text style={styles.headerText}>AI Chatbot</Text>
+          <View style={{ width: 30 }} /> {/* Placeholder for alignment */}
         </Animated.View>
 
+        {/* Chat Messages */}
         <ScrollView
           ref={scrollViewRef}
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={true}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
         >
           <View style={styles.chatContainer}>
             {messages.map((message, index) => (
@@ -115,6 +120,7 @@ export default function AIChatScreen() {
           </View>
         </ScrollView>
 
+        {/* Input Box */}
         <View style={styles.inputContainer}>
           <TextInput
             value={input}
@@ -122,8 +128,8 @@ export default function AIChatScreen() {
               setInput(text);
               setError("");
             }}
-            placeholder="Type your question..."
-            placeholderTextColor="#999"
+            placeholder="Ask something..."
+            placeholderTextColor="#bbb"
             style={styles.input}
             multiline
           />
@@ -136,7 +142,7 @@ export default function AIChatScreen() {
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.sendButtonText}>Send</Text>
+              <Text style={styles.sendButtonText}>➤</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -146,6 +152,10 @@ export default function AIChatScreen() {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#1e1e1e",
+  },
   container: {
     flex: 1,
     backgroundColor: "#1e1e1e",
@@ -153,9 +163,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#2c2c2c",
+    justifyContent: "space-between",
+    padding: 15,
+    backgroundColor: "#292929",
     borderBottomWidth: 1,
     borderBottomColor: "#444",
   },
@@ -163,25 +173,31 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     marginRight: 10,
-    borderRadius: 0,
+    borderRadius: 20,
   },
   headerText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#fff",
   },
+  scrollView: {
+    flex: 1,
+  },
   scrollContainer: {
     flexGrow: 1,
-    padding: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    flex: 1,
   },
   chatContainer: {
     flex: 1,
+    minHeight: '100%',
   },
   messageBubble: {
-    padding: 15,
+    padding: 12,
     marginBottom: 10,
-    maxWidth: "80%",
-    borderRadius: 0,
+    maxWidth: "75%",
+    borderRadius: 18,
   },
   userMessage: {
     backgroundColor: "#007bff",
@@ -199,42 +215,41 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 10,
-    backgroundColor: "#2c2c2c",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: "#292929",
     borderTopWidth: 1,
     borderTopColor: "#444",
   },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "#444",
-    borderRadius: 0,
-    padding: 15,
-    marginRight: 10,
+    borderWidth: 0,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     fontSize: 16,
     backgroundColor: "#3c3c3c",
     color: "#fff",
-    textAlignVertical: "top",
-    minHeight: 60,
+    minHeight: 40,
     maxHeight: 120,
   },
   sendButton: {
     backgroundColor: "#007bff",
-    borderRadius: 0,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    borderRadius: 20,
+    padding: 12,
+    marginLeft: 10,
     justifyContent: "center",
     alignItems: "center",
   },
   sendButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
   },
   errorText: {
     color: "#ff4444",
     fontSize: 14,
-    marginBottom: 10,
     textAlign: "center",
+    marginTop: 5,
   },
 });

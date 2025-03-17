@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+ import React, { useState, useEffect } from "react";
 import {
   View,
   Image,
@@ -22,6 +22,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import * as Clipboard from "expo-clipboard";
 import * as FileSystem from "expo-file-system";
+import TemplateChooser from "./TemplateChooser";
+import DocumentScanner from "./DocumentScanner";
 
 const { width, height } = Dimensions.get("window");
 
@@ -112,7 +114,7 @@ const OCRScreen = () => {
     setCustomText(formattedText);
   };
 
-  const navigateToDocumentScanner = () => {
+  const DocumentScanner = () => {
     navigation.navigate("DocumentScanner");
   };
 
@@ -175,17 +177,17 @@ const OCRScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.actionButton} onPress={navigateToDocumentScanner}>
+            <TouchableOpacity style={styles.actionButton} onPress={DocumentScanner}>
               <Icon name="document-scanner" size={24} color="#fff" style={styles.buttonIcon} />
               <Text style={styles.buttonText}>Scan Document</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => navigation.navigate("TemplateChooser", { text: extractedText })}
+              onPress={() => navigation.navigate('TemplateChooser', { text: extractedText })}
             >
               <Icon name="format-align-left" size={24} color="#fff" style={styles.buttonIcon} />
-              <Text style={styles.buttonText}>Choose Template</Text>
+              <Text style={styles.buttonText}> Templates </Text>
             </TouchableOpacity>
           </View>
 
@@ -329,6 +331,7 @@ const OCRScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
   },
   header: {
     flexDirection: "row",

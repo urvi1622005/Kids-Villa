@@ -84,14 +84,15 @@ const LoginScreen = () => {
         await AsyncStorage.removeItem('password');
       }
 
-      login(data.user); // Use the login function from AuthContext
+      login(data.user);
       navigation.navigate('HomeScreen');
     } catch (error) {
-      let errorMessage = 'Login failed';
+      let errorMessage = 'Login failed. Please check your credentials.';
       if (error.response) {
         errorMessage = error.response.data.message || errorMessage;
       }
       setError(errorMessage);
+      shakeForm();
     } finally {
       setLoading(false);
     }
@@ -235,15 +236,17 @@ const styles = StyleSheet.create({
   },
   loginBox: {
     width: '90%',
-    maxWidth: 500,
+    maxWidth: 400,
     backgroundColor: '#2A2A2A',
     padding: 30,
-    borderRadius: 15,
+    borderRadius: 20,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 5,
+    borderWidth: 1,
+    borderColor: '#444',
   },
   title: {
     fontSize: 28,
@@ -262,9 +265,9 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#3A3A3A',
     color: 'white',
-    borderRadius: 10,
+    borderRadius: 15,
     padding: 15,
-    marginBottom: 15,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: '#444',
     fontSize: 16,
@@ -290,9 +293,14 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     width: '100%',
-    borderRadius: 10,
+    borderRadius: 15,
     overflow: 'hidden',
     marginBottom: 20,
+    shadowColor: '#FF5722',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
   },
   gradientButton: {
     paddingVertical: 15,
@@ -326,6 +334,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     marginBottom: 20,
+    gap: 10,
   },
   socialButton: {
     flex: 1,
@@ -333,9 +342,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#3A3A3A',
-    padding: 10,
-    borderRadius: 10,
-    marginHorizontal: 5,
+    padding: 12,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#444',
   },
   socialButtonText: {
     color: 'white',

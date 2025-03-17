@@ -13,6 +13,7 @@ import HomeScreen from "./components/HomeScreen";
 import AIChatScreen from "./components/AIChatScreen"; // ✅ AI Chat Screen
 import TemplateChooser from "./components/TemplateChooser";
 import DocumentScanner from "./components/DocumentScanner";
+import Settings from "./components/Settings";
 const Stack = createStackNavigator();
 
 const MainNavigator = () => {
@@ -45,6 +46,7 @@ const MainNavigator = () => {
             <Stack.Screen name="AIChat" component={AIChatScreen} />
             <Stack.Screen name="DocumentScanner" component={DocumentScanner} />
             <Stack.Screen name="TemplateChooser" component={TemplateChooser} />
+            <Stack.Screen name="Settings" component={Settings} />
           </>
         ) : (
           // Show app screens if the user is authenticated

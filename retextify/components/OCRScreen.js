@@ -22,6 +22,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import * as Clipboard from "expo-clipboard";
 import * as FileSystem from "expo-file-system";
+import Settings from './Settings';
 import TemplateChooser from "./TemplateChooser";
 import DocumentScanner from "./DocumentScanner";
 
@@ -318,11 +319,19 @@ const OCRScreen = () => {
 
         <TouchableOpacity
           style={styles.navButton}
-          onPress={() => navigation.navigate("AIChatScreen", { extractedText })}
+          onPress={() => navigation.navigate("AIChat", { extractedText })}
         >
           <Icon name="chat" size={24} color="#fff" />
           <Text style={styles.buttonText}>Chat with AI</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+        style={styles.navButton}
+        onPress={() => navigation.navigate("Settings")}
+      >
+        <Icon name="settings" size={24} color="#fff" />
+        <Text style={styles.buttonText}>Go to Settings</Text>
+       </TouchableOpacity>
       </View>
     </LinearGradient>
   );

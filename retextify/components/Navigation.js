@@ -6,6 +6,7 @@ import { AuthContext } from './context/AuthContext'; // Example: Auth context fo
 // Import all screens
 import DocumentScanner from './screens/DocumentScanner';
 import OCRScreen from './screens/OCRScreen';
+import Settings from './Settings';
 // import LoginScreen from './screens/LoginScreen';
 import SignUpScreen from './screens/SignupScreen';
 import AIChatScreen from './screens/AIChatScreen';
@@ -20,6 +21,7 @@ const MainNavigator = () => {
       <Stack.Screen name="DocumentScanner" component={DocumentScanner} />
       <Stack.Screen name="OCRScreen" component={OCRScreen} />
       <Stack.Screen name="AIChatScreen" component={AIChatScreen} />
+      <Stack.Screen name="Settings" component={Settings} />
     </Stack.Navigator>
   );
 };

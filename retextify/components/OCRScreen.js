@@ -1,4 +1,4 @@
- import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Image,
@@ -9,7 +9,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Animated,
   Dimensions,
   Modal,
   TouchableWithoutFeedback,
@@ -22,9 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import * as Clipboard from "expo-clipboard";
 import * as FileSystem from "expo-file-system";
-import Settings from './Settings';
-import TemplateChooser from "./TemplateChooser";
-import DocumentScanner from "./DocumentScanner";
+import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutRight } from "react-native-reanimated";
 
 const { width, height } = Dimensions.get("window");
 
@@ -40,7 +37,6 @@ const OCRScreen = () => {
   const [customText, setCustomText] = useState("");
   const [isImageModalVisible, setImageModalVisible] = useState(false);
   const [isSidebarVisible, setSidebarVisible] = useState(false);
-  const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
     if (initialImage) {
@@ -130,18 +126,6 @@ const OCRScreen = () => {
     Alert.alert("Saved", `Text saved to ${fileUri}`);
   };
 
-  const fadeIn = () => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: false, // Set to false
-    }).start();
-  };
-
-  React.useEffect(() => {
-    fadeIn();
-  }, []);
-
   return (
     <LinearGradient colors={["#1A1A1A", "#121212"]} style={styles.container}>
       <View style={styles.header}>
@@ -155,9 +139,17 @@ const OCRScreen = () => {
       </View>
 
       {isSidebarVisible && (
-        <TouchableWithoutFeedback onPress={() => setSidebarVisible(false)}>
-          <View style={styles.sidebarOverlay}>
-            <View style={styles.sidebar}>
+        <Animated.View
+          style={styles.sidebarOverlay}
+          entering={FadeIn.duration(300)}
+          exiting={FadeOut.duration(300)}
+        >
+          <TouchableWithoutFeedback onPress={() => setSidebarVisible(false)}>
+            <Animated.View
+              style={styles.sidebar}
+              entering={SlideInRight.duration(300)}
+              exiting={SlideOutRight.duration(300)}
+            >
               <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("Home")}>
                 <Icon name="home" size={24} color="#fff" />
                 <Text style={styles.sidebarText}>Home</Text>
@@ -170,13 +162,13 @@ const OCRScreen = () => {
                 <Icon name="history" size={24} color="#fff" />
                 <Text style={styles.sidebarText}>History</Text>
               </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
+            </Animated.View>
+          </TouchableWithoutFeedback>
+        </Animated.View>
       )}
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
+        <Animated.View style={styles.contentContainer} entering={FadeIn.duration(500)}>
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.actionButton} onPress={DocumentScanner}>
               <Icon name="document-scanner" size={24} color="#fff" style={styles.buttonIcon} />
@@ -326,12 +318,12 @@ const OCRScreen = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-        style={styles.navButton}
-        onPress={() => navigation.navigate("Settings")}
-      >
-        <Icon name="settings" size={24} color="#fff" />
-        <Text style={styles.buttonText}>Go to Settings</Text>
-       </TouchableOpacity>
+          style={styles.navButton}
+          onPress={() => navigation.navigate("Settings")}
+        >
+          <Icon name="settings" size={24} color="#fff" />
+          <Text style={styles.buttonText}>Go to Settings</Text>
+        </TouchableOpacity>
       </View>
     </LinearGradient>
   );
@@ -405,7 +397,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF5722",
     padding: 15,
     borderRadius: 10,
-    marginVertical: 10,
+    marginVertical: 20,
     width: "80%",
     alignItems: "center",
     justifyContent: "center",

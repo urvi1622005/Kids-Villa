@@ -5,7 +5,8 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 
 // Import Screens
-// import LoginScreen from "./components/LoginScreen";
+import SplashScreen from "./components/SplashScreen";
+import LoginScreen from "./components/LoginScreen";
 import SignupScreen from "./components/SignupScreen";
 import ForgotPassword from "./components/ForgotPassword";
 import OCRScreen from "./components/OCRScreen";
@@ -39,6 +40,8 @@ const MainNavigator = () => {
           // Show authentication screens if the user is NOT authenticated
           <>
             {/* <Stack.Screen name="Login" component={LoginScreen} /> */}
+            <Stack.Screen name="SplashScreen" component={SplashScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
             <Stack.Screen name="Home" component={HomeScreen} />

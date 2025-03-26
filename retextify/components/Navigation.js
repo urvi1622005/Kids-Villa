@@ -7,9 +7,10 @@ import { AuthContext } from './context/AuthContext'; // Example: Auth context fo
 import DocumentScanner from './screens/DocumentScanner';
 import OCRScreen from './screens/OCRScreen';
 import Settings from './Settings';
-// import LoginScreen from './screens/LoginScreen';
+import LoginScreen from './screens/LoginScreen';
 import SignUpScreen from './screens/SignupScreen';
 import AIChatScreen from './screens/AIChatScreen';
+import SplashScreen from './screens/SplashScreen'; 
 
 // Create stack navigators
 const Stack = createStackNavigator();
@@ -30,7 +31,8 @@ const MainNavigator = () => {
 const AuthNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {/* <Stack.Screen name="LoginScreen" component={LoginScreen} /> */}
+      <Stack.Screen name="SplashScreen" component={SplashScreen} />
+      <Stack.Screen name="LoginScreen" component={LoginScreen} />
       <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
     </Stack.Navigator>
   );

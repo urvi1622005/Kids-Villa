@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Alert,
   Animated,
   ActivityIndicator,
   Platform,
@@ -19,17 +18,28 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from './AuthContext'; // Verify this path
 
 const { width, height } = Dimensions.get('window');
 const API_URL =
   Platform.OS === 'android'
-    ? 'http://10.0.2.2:5000/api' // Android Emulator
-    : 'http://localhost:5000/api'; // iOS Emulator or Physical Device
+    ? 'http://10.0.2.2:5000/api'
+    : 'http://localhost:5000/api';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
-  const { login } = useAuth();
+
+  // Debug useAuth
+  let auth;
+try {
+  auth = useAuth(); // Line 35
+  console.log("useAuth result:", auth);
+} catch (e) {
+  console.error("Error calling useAuth:", e);
+  auth = { login: () => console.error("Fallback login used") };
+}
+  const { login } = auth;
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,8 +67,8 @@ const LoginScreen = () => {
         setPassword(savedPassword);
         setRememberMe(true);
       }
-    } catch (error) {
-      console.error('Failed to load saved credentials:', error);
+    } catch (err) {
+      console.error('Failed to load saved credentials:', err);
     }
   };
 
@@ -71,7 +81,14 @@ const LoginScreen = () => {
     try {
       setLoading(true);
       setError('');
-      const { data } = await axios.post(`${API_URL}/login`, { email, password }); // Ensure this matches backend route
+      const response = await axios.post(`/login`, { email, password });
+      const { data } = response;
+      console.log("Login response:", data);
+
+      if (!data.user) {
+        throw new Error("No user data in response");
+      }
+
       if (rememberMe) {
         await AsyncStorage.setItem('email', email);
         await AsyncStorage.setItem('password', password);
@@ -79,11 +96,17 @@ const LoginScreen = () => {
         await AsyncStorage.removeItem('email');
         await AsyncStorage.removeItem('password');
       }
-      login(data.user); // Ensure data.user exists in response
+
+      login(data.user);
       navigation.navigate('HomeScreen');
-    } catch (error) {
+    } catch (err) {
+      console.error("Login error:", err);
       let errorMessage = 'Login failed. Please check your credentials.';
-      if (error.response) errorMessage = error.response.data.message || errorMessage;
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -108,10 +131,7 @@ const LoginScreen = () => {
 
   return (
     <LinearGradient colors={['#0F172A', '#1E40AF']} style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-      >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Animated.View
             style={[
@@ -156,15 +176,9 @@ const LoginScreen = () => {
             </View>
 
             <View style={styles.optionsContainer}>
-              <TouchableOpacity
-                style={styles.checkboxContainer}
-                onPress={() => setRememberMe(!rememberMe)}
-              >
+              <TouchableOpacity style={styles.checkboxContainer} onPress={() => setRememberMe(!rememberMe)}>
                 <Animated.View
-                  style={[
-                    styles.checkbox,
-                    { backgroundColor: rememberMe ? '#60A5FA' : '#475569' },
-                  ]}
+                  style={[styles.checkbox, { backgroundColor: rememberMe ? '#60A5FA' : '#475569' }]}
                 >
                   {rememberMe && <MaterialIcons name="check" size={16} color="#F8FAFC" />}
                 </Animated.View>
@@ -208,10 +222,10 @@ const LoginScreen = () => {
             </View>
 
             <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-              <Text style={styles.signupText}>
-                Don’t have an account? <Text style={styles.signupLink}>Sign Up</Text>
-              </Text>
-            </TouchableOpacity>
+            <Text style={styles.signupText}>
+             Don’t have an account? <Text style={styles.signupLink}>Sign Up</Text>
+             </Text>
+          </TouchableOpacity>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -220,50 +234,27 @@ const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
+  container: { flex: 1 },
+  scrollContainer: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 40 },
   loginBox: {
     width: '90%',
     maxWidth: 420,
     padding: 35,
     borderRadius: 25,
     backgroundColor: 'rgba(30, 41, 59, 0.95)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.4,
-    shadowRadius: 15,
+    boxShadow: '0px 10px 15px rgba(0, 0, 0, 0.4)',
     elevation: 15,
     alignItems: 'center',
   },
-  logo: {
-    width: 80,
-    height: 80,
-    marginBottom: 20,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#60A5FA',
-  },
+  logo: { width: 80, height: 80, marginBottom: 20, borderRadius: 20, borderWidth: 2, borderColor: '#60A5FA' },
   title: {
     fontSize: 32,
     fontWeight: '700',
     color: '#F8FAFC',
     marginBottom: 10,
-    textShadowColor: 'rgba(96, 165, 250, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
+    textShadow: '0px 2px 6px rgba(96, 165, 250, 0.3)',
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#D1D5DB',
-    marginBottom: 25,
-  },
+  subtitle: { fontSize: 16, color: '#D1D5DB', marginBottom: 25 },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -273,11 +264,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     width: '100%',
   },
-  errorText: {
-    color: '#F87171',
-    fontSize: 14,
-    marginLeft: 8,
-  },
+  errorText: { color: '#F87171', fontSize: 14, marginLeft: 8 },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -287,31 +274,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderWidth: 1,
     borderColor: '#475569',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     width: '100%',
   },
-  icon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    color: '#F8FAFC',
-    paddingVertical: 14,
-    fontSize: 16,
-  },
-  optionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 25,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  icon: { marginRight: 12 },
+  input: { flex: 1, color: '#F8FAFC', paddingVertical: 14, fontSize: 16 },
+  optionsContainer: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 25 },
+  checkboxContainer: { flexDirection: 'row', alignItems: 'center' },
   checkbox: {
     width: 24,
     height: 24,
@@ -322,58 +291,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#60A5FA',
   },
-  checkboxText: {
-    color: '#D1D5DB',
-    fontSize: 15,
-  },
-  forgotText: {
-    color: '#60A5FA',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  loginButton: {
-    width: '100%',
-    borderRadius: 15,
-    // overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  gradientButton: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  loginButtonText: {
-    color: '#F8FAFC',
-    fontSize: 18,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    marginVertical: 25,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#475569',
-  },
-  dividerText: {
-    color: '#D1D5DB',
-    fontSize: 14,
-    marginHorizontal: 10,
-  },
-  socialButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    gap: 10,
-    marginBottom: 20,
-  },
+  checkboxText: { color: '#D1D5DB', fontSize: 15 },
+  forgotText: { color: '#60A5FA', fontSize: 14, fontWeight: '500' },
+  loginButton: { width: '100%', borderRadius: 15, boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)', elevation: 8 },
+  gradientButton: { paddingVertical: 16, alignItems: 'center' },
+  loginButtonText: { color: '#F8FAFC', fontSize: 18, fontWeight: '600', letterSpacing: 0.5 },
+  dividerContainer: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 25 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#475569' },
+  dividerText: { color: '#D1D5DB', fontSize: 14, marginHorizontal: 10 },
+  socialButtonsContainer: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', gap: 10, marginBottom: 20 },
   socialButton: {
     flex: 1,
     flexDirection: 'row',
@@ -385,19 +311,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#475569',
   },
-  socialButtonText: {
-    color: '#F8FAFC',
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  signupText: {
-    color: '#D1D5DB',
-    fontSize: 14,
-  },
-  signupLink: {
-    color: '#60A5FA',
-    fontWeight: '600',
-  },
+  socialButtonText: { color: '#F8FAFC', fontSize: 14, marginLeft: 8 },
+  signupText: { color: '#D1D5DB', fontSize: 14 },
+  signupLink: { color: '#60A5FA', fontWeight: '600' },
 });
 
 export default LoginScreen;

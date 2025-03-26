@@ -40,7 +40,7 @@ const OCRScreen = () => {
 
   useEffect(() => {
     if (initialImage) {
-      extractTextFromImage(initialImage);
+      processImage(initialImage);
     }
   }, [initialImage]);
 
@@ -56,7 +56,7 @@ const OCRScreen = () => {
     setImageLoading(true);
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Denied", "Please allow access to your photo library to pick images.");
+      Alert.alert("Permission Denied", "Please grant photo library access.");
       setImageLoading(false);
       return;
     }
@@ -68,13 +68,14 @@ const OCRScreen = () => {
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
-      await extractTextFromImage(result.assets[0].uri);
+      const uri = result.assets[0].uri;
+      setImage(uri);
+      await processImage(uri);
     }
     setImageLoading(false);
   };
 
-  const extractTextFromImage = async (imageUri) => {
+  const processImage = async (imageUri) => {
     if (!imageUri) {
       Alert.alert("Error", "No image selected.");
       return;
@@ -85,12 +86,16 @@ const OCRScreen = () => {
     setCustomText("");
 
     try {
+      // OCR Processing
       const { data: { text } } = await Tesseract.recognize(imageUri, "eng");
       setExtractedText(text || "No text detected.");
       setCustomText(text || "No text detected.");
+
+      // Send to Gemini (assuming you have a function in another file)
+      navigation.navigate("GeminiScreen", { imageUri }); // Adjust based on your implementation
     } catch (error) {
-      console.error("OCR Error:", error);
-      Alert.alert("Error", "Failed to extract text. Please try again.");
+      console.error("Processing Error:", error);
+      Alert.alert("Error", "Failed to process image. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -98,46 +103,42 @@ const OCRScreen = () => {
 
   const applyTemplate = (template) => {
     setSelectedTemplate(template);
-
     let formattedText = extractedText;
     if (template === "Standard") {
-      formattedText = `📄 Standard Document\n\n${extractedText}`;
+      formattedText = `📄 Standard Format\n\n${extractedText}`;
     } else if (template === "Handwritten") {
-      formattedText = `✍️ Handwritten Style\n\n"${extractedText}"`;
+      formattedText = `✍️ Handwritten Note\n\n"${extractedText}"`;
     } else if (template === "Custom") {
-      formattedText = extractedText; // Let user edit freely
+      formattedText = extractedText;
     }
-
     setCustomText(formattedText);
-  };
-
-  const DocumentScanner = () => {
-    navigation.navigate("DocumentScanner");
   };
 
   const copyToClipboard = async () => {
     await Clipboard.setStringAsync(customText);
-    Alert.alert("Copied", "Text copied to clipboard!");
+    Alert.alert("Success", "Text copied to clipboard!");
   };
 
   const saveTextToFile = async () => {
     const fileUri = FileSystem.documentDirectory + "extracted_text.txt";
     await FileSystem.writeAsStringAsync(fileUri, customText);
-    Alert.alert("Saved", `Text saved to ${fileUri}`);
+    Alert.alert("Success", `Text saved to ${fileUri}`);
   };
 
   return (
-    <LinearGradient colors={["#1A1A1A", "#121212"]} style={styles.container}>
+    <LinearGradient colors={["#0F172A", "#1E293B"]} style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={30} color="#fff" />
+          <Icon name="arrow-back" size={28} color="#F8FAFC" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>OCR & Template Formatting</Text>
+        <Text style={styles.headerTitle}>Text Extractor</Text>
         <TouchableOpacity onPress={() => setSidebarVisible(!isSidebarVisible)}>
-          <Icon name="menu" size={30} color="#fff" />
+          <Icon name="menu" size={28} color="#F8FAFC" />
         </TouchableOpacity>
       </View>
 
+      {/* Sidebar */}
       {isSidebarVisible && (
         <Animated.View
           style={styles.sidebarOverlay}
@@ -151,15 +152,15 @@ const OCRScreen = () => {
               exiting={SlideOutRight.duration(300)}
             >
               <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("Home")}>
-                <Icon name="home" size={24} color="#fff" />
+                <Icon name="home" size={26} color="#F8FAFC" />
                 <Text style={styles.sidebarText}>Home</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("Settings")}>
-                <Icon name="settings" size={24} color="#fff" />
+                <Icon name="settings" size={26} color="#F8FAFC" />
                 <Text style={styles.sidebarText}>Settings</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate("History")}>
-                <Icon name="history" size={24} color="#fff" />
+                <Icon name="history" size={26} color="#F8FAFC" />
                 <Text style={styles.sidebarText}>History</Text>
               </TouchableOpacity>
             </Animated.View>
@@ -168,37 +169,57 @@ const OCRScreen = () => {
       )}
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Animated.View style={styles.contentContainer} entering={FadeIn.duration(500)}>
+        <Animated.View style={styles.contentContainer} entering={FadeIn.duration(600)}>
+          {/* Action Buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.actionButton} onPress={DocumentScanner}>
-              <Icon name="document-scanner" size={24} color="#fff" style={styles.buttonIcon} />
-              <Text style={styles.buttonText}>Scan Document</Text>
+            <TouchableOpacity 
+              style={styles.actionButton} 
+              onPress={() => navigation.navigate("DocumentScanner")}
+            >
+              <LinearGradient
+                colors={["#3B82F6", "#1E40AF"]}
+                style={styles.buttonGradient}
+              >
+                <Icon name="document-scanner" size={24} color="#F8FAFC" />
+                <Text style={styles.buttonText}>Scan Document</Text>
+              </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => navigation.navigate('TemplateChooser', { text: extractedText })}
             >
-              <Icon name="format-align-left" size={24} color="#fff" style={styles.buttonIcon} />
-              <Text style={styles.buttonText}> Templates </Text>
+              <LinearGradient
+                colors={["#10B981", "#047857"]}
+                style={styles.buttonGradient}
+              >
+                <Icon name="format-align-left" size={24} color="#F8FAFC" />
+                <Text style={styles.buttonText}>Templates</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
 
+          {/* Image Preview */}
           {image && (
             <TouchableOpacity onPress={() => setImageModalVisible(true)}>
               <View style={styles.imageContainer}>
                 <Image source={{ uri: image }} style={styles.image} />
+                <View style={styles.imageOverlay}>
+                  <Text style={styles.imageOverlayText}>Tap to enlarge</Text>
+                </View>
               </View>
             </TouchableOpacity>
           )}
 
+          {/* Loading Indicator */}
           {loading && (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#FF5722" />
-              <Text style={styles.loadingText}>Extracting Text...</Text>
+              <ActivityIndicator size="large" color="#60A5FA" />
+              <Text style={styles.loadingText}>Processing Image...</Text>
             </View>
           )}
 
+          {/* Extracted Text */}
           {!loading && extractedText ? (
             <>
               <Text style={styles.subTitle}>Extracted Text</Text>
@@ -207,16 +228,16 @@ const OCRScreen = () => {
                 multiline
                 value={customText}
                 onChangeText={setCustomText}
-                placeholder="Extracted text will appear here..."
-                placeholderTextColor="#bbb"
+                placeholder="Your extracted text will appear here..."
+                placeholderTextColor="#94A3B8"
               />
               <View style={styles.textActions}>
                 <TouchableOpacity style={styles.textActionButton} onPress={copyToClipboard}>
-                  <Icon name="content-copy" size={24} color="#fff" />
+                  <Icon name="content-copy" size={22} color="#F8FAFC" />
                   <Text style={styles.textActionButtonText}>Copy</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.textActionButton} onPress={saveTextToFile}>
-                  <Icon name="save" size={24} color="#fff" />
+                  <Icon name="save" size={22} color="#F8FAFC" />
                   <Text style={styles.textActionButtonText}>Save</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -226,67 +247,76 @@ const OCRScreen = () => {
                     setCustomText("");
                   }}
                 >
-                  <Icon name="clear" size={24} color="#fff" />
+                  <Icon name="clear" size={22} color="#F8FAFC" />
                   <Text style={styles.textActionButtonText}>Clear</Text>
                 </TouchableOpacity>
               </View>
             </>
           ) : null}
 
+          {/* Template Selection */}
           {!loading && extractedText ? (
             <>
-              <Text style={styles.subTitle}>Choose a Template</Text>
+              <Text style={styles.subTitle}>Format Your Text</Text>
               <View style={styles.templateContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.templateButton,
-                    selectedTemplate === "Standard" && styles.selectedTemplate,
-                  ]}
-                  onPress={() => applyTemplate("Standard")}
-                >
-                  <Icon name="description" size={24} color="#fff" />
-                  <Text style={styles.templateButtonText}>Standard</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.templateButton,
-                    selectedTemplate === "Handwritten" && styles.selectedTemplate,
-                  ]}
-                  onPress={() => applyTemplate("Handwritten")}
-                >
-                  <Icon name="edit" size={24} color="#fff" />
-                  <Text style={styles.templateButtonText}>Handwritten</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.templateButton,
-                    selectedTemplate === "Custom" && styles.selectedTemplate,
-                  ]}
-                  onPress={() => applyTemplate("Custom")}
-                >
-                  <Icon name="create" size={24} color="#fff" />
-                  <Text style={styles.templateButtonText}>Custom</Text>
-                </TouchableOpacity>
+                {["Standard", "Handwritten", "Custom"].map((template) => (
+                  <TouchableOpacity
+                    key={template}
+                    style={[
+                      styles.templateButton,
+                      selectedTemplate === template && styles.selectedTemplate,
+                    ]}
+                    onPress={() => applyTemplate(template)}
+                  >
+                    <LinearGradient
+                      colors={
+                        template === "Standard" ? ["#8B5CF6", "#6D28D9"] :
+                        template === "Handwritten" ? ["#EC4899", "#DB2777"] :
+                        ["#F59E0B", "#D97706"]
+                      }
+                      style={styles.templateGradient}
+                    >
+                      <Icon
+                        name={
+                          template === "Standard" ? "description" :
+                          template === "Handwritten" ? "edit" :
+                          "create"
+                        }
+                        size={24}
+                        color="#F8FAFC"
+                      />
+                      <Text style={styles.templateButtonText}>{template}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ))}
               </View>
             </>
           ) : null}
 
-          <TouchableOpacity style={styles.pickImageButton} onPress={pickImage} disabled={imageLoading}>
-            {imageLoading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Icon name="image" size={24} color="#fff" style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>Pick Another Image</Text>
-              </>
-            )}
+          {/* Pick Image Button */}
+          <TouchableOpacity 
+            style={styles.pickImageButton} 
+            onPress={pickImage} 
+            disabled={imageLoading}
+          >
+            <LinearGradient
+              colors={["#60A5FA", "#2563EB"]}
+              style={styles.buttonGradient}
+            >
+              {imageLoading ? (
+                <ActivityIndicator size="small" color="#F8FAFC" />
+              ) : (
+                <>
+                  <Icon name="image" size={24} color="#F8FAFC" />
+                  <Text style={styles.buttonText}>Pick New Image</Text>
+                </>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
 
-      {/* Image Preview Modal */}
+      {/* Image Modal */}
       <Modal
         visible={isImageModalVisible}
         transparent={true}
@@ -295,35 +325,37 @@ const OCRScreen = () => {
         <TouchableWithoutFeedback onPress={() => setImageModalVisible(false)}>
           <View style={styles.modalContainer}>
             <Image source={{ uri: image }} style={styles.fullScreenImage} />
+            <TouchableOpacity 
+              style={styles.modalCloseButton}
+              onPress={() => setImageModalVisible(false)}
+            >
+              <Icon name="close" size={30} color="#F8FAFC" />
+            </TouchableOpacity>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
 
-      {/* Navigation Buttons */}
+      {/* Bottom Navigation */}
       <View style={styles.navigationButtons}>
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => navigation.navigate("Home")}
-        >
-          <Icon name="home" size={24} color="#fff" />
-          <Text style={styles.buttonText}>Go to Home</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => navigation.navigate("AIChat", { extractedText })}
-        >
-          <Icon name="chat" size={24} color="#fff" />
-          <Text style={styles.buttonText}>Chat with AI</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => navigation.navigate("Settings")}
-        >
-          <Icon name="settings" size={24} color="#fff" />
-          <Text style={styles.buttonText}>Go to Settings</Text>
-        </TouchableOpacity>
+        {[
+          { icon: "home", text: "Home", route: "Home" },
+          { icon: "chat", text: "AI Chat", route: "AIChat", params: { extractedText } },
+          { icon: "settings", text: "Settings", route: "Settings" },
+        ].map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.navButton}
+            onPress={() => navigation.navigate(item.route, item.params)}
+          >
+            <LinearGradient
+              colors={["#475569", "#334155"]}
+              style={styles.navButtonGradient}
+            >
+              <Icon name={item.icon} size={24} color="#F8FAFC" />
+              <Text style={styles.navButtonText}>{item.text}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        ))}
       </View>
     </LinearGradient>
   );
@@ -332,21 +364,21 @@ const OCRScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingTop: 40,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 20,
-    backgroundColor: "#1A1A1A",
-    borderBottomWidth: 1,
-    borderBottomColor: "#333",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: "rgba(15, 23, 42, 0.9)",
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
-    marginLeft: 20,
+    fontWeight: "700",
+    color: "#F8FAFC",
+    letterSpacing: 0.5,
   },
   sidebarOverlay: {
     position: "absolute",
@@ -354,173 +386,197 @@ const styles = StyleSheet.create({
     left: 0,
     width: "100%",
     height: "100%",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    zIndex: 999,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    zIndex: 1000,
   },
   sidebar: {
     position: "absolute",
-    top: 80,
-    left: 0,
-    width: 200,
+    top: 0,
+    right: 0,
+    width: 240,
     height: "100%",
-    backgroundColor: "#1A1A1A",
+    backgroundColor: "#1E293B",
     padding: 20,
-    zIndex: 1000,
-    borderRightWidth: 1,
-    borderRightColor: "#333",
+    zIndex: 1001,
+    borderLeftWidth: 1,
+    borderLeftColor: "#334155",
   },
   sidebarItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+    backgroundColor: "rgba(51, 65, 85, 0.3)",
   },
   sidebarText: {
-    fontSize: 16,
-    color: "white",
-    marginLeft: 10,
+    fontSize: 18,
+    color: "#F8FAFC",
+    marginLeft: 15,
+    fontWeight: "500",
   },
   scrollContainer: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingVertical: 20,
+    padding: 20,
+    paddingBottom: 100,
   },
   contentContainer: {
-    padding: 20,
     alignItems: "center",
   },
   buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     width: "100%",
-    alignItems: "center",
+    marginBottom: 25,
   },
   actionButton: {
+    width: "48%",
+    borderRadius: 12,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  buttonGradient: {
     flexDirection: "row",
-    backgroundColor: "#FF5722",
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 20,
-    width: "80%",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 2,
-    elevation: 5,
-  },
-  buttonIcon: {
-    marginRight: 10,
+    padding: 14,
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "white",
-    fontFamily: "Roboto-Medium",
+    fontWeight: "600",
+    color: "#F8FAFC",
+    marginLeft: 10,
   },
   imageContainer: {
+    borderRadius: 16,
+    overflow: "hidden",
+    marginBottom: 25,
     borderWidth: 2,
-    borderColor: "#FF5722",
-    borderRadius: 10,
-    padding: 5,
-    marginVertical: 10,
+    borderColor: "#60A5FA",
+    position: "relative",
   },
   image: {
-    width: width * 0.8,
-    height: height * 0.3,
+    width: width * 0.9,
+    height: height * 0.35,
     resizeMode: "contain",
-    borderRadius: 10,
+  },
+  imageOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    padding: 8,
+    alignItems: "center",
+  },
+  imageOverlayText: {
+    color: "#F8FAFC",
+    fontSize: 14,
   },
   loadingContainer: {
-    marginVertical: 20,
     alignItems: "center",
+    marginVertical: 30,
   },
   loadingText: {
     fontSize: 16,
-    color: "#FF5722",
+    color: "#60A5FA",
     marginTop: 10,
-    fontFamily: "Roboto-Regular",
+    fontWeight: "500",
   },
   subTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-    marginVertical: 10,
-    fontFamily: "Roboto-Bold",
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#F8FAFC",
+    marginBottom: 15,
+    alignSelf: "flex-start",
   },
   textArea: {
-    width: "90%",
-    height: 150,
-    borderWidth: 1,
-    borderColor: "#FF5722",
-    borderRadius: 10,
-    padding: 10,
+    width: "100%",
+    height: 180,
+    borderRadius: 12,
+    padding: 15,
     fontSize: 16,
-    color: "white",
-    backgroundColor: "#2A2A2A",
-    fontFamily: "Roboto-Regular",
+    color: "#F8FAFC",
+    backgroundColor: "#1E293B",
+    borderWidth: 1,
+    borderColor: "#475569",
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   textActions: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    width: "90%",
-    marginVertical: 10,
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 25,
   },
   textActionButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#007AFF",
-    padding: 10,
-    borderRadius: 8,
+    justifyContent: "center",
+    backgroundColor: "#475569",
+    padding: 12,
+    borderRadius: 10,
     marginHorizontal: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   textActionButtonText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "white",
-    marginLeft: 5,
-    fontFamily: "Roboto-Medium",
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#F8FAFC",
+    marginLeft: 8,
   },
   templateContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    width: "90%",
-    marginVertical: 10,
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 25,
   },
   templateButton: {
-    backgroundColor: "#28a745",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    width: "30%",
+    width: "31%",
+    borderRadius: 12,
+    overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 2,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
   selectedTemplate: {
-    backgroundColor: "#0056b3",
+    borderWidth: 2,
+    borderColor: "#F8FAFC",
+  },
+  templateGradient: {
+    padding: 14,
+    alignItems: "center",
   },
   templateButtonText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "white",
-    marginTop: 5,
-    fontFamily: "Roboto-Medium",
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#F8FAFC",
+    marginTop: 8,
   },
   pickImageButton: {
-    flexDirection: "row",
-    backgroundColor: "#007AFF",
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 10,
-    width: "80%",
-    alignItems: "center",
-    justifyContent: "center",
+    width: "100%",
+    borderRadius: 12,
+    overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 2,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
   modalContainer: {
     flex: 1,
@@ -529,20 +585,45 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.9)",
   },
   fullScreenImage: {
-    width: width * 0.9,
-    height: height * 0.7,
+    width: width * 0.95,
+    height: height * 0.75,
     resizeMode: "contain",
+  },
+  modalCloseButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    backgroundColor: "rgba(71, 85, 105, 0.8)",
+    borderRadius: 20,
+    padding: 8,
   },
   navigationButtons: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    padding: 10,
-    backgroundColor: "#1A1A1A",
+    justifyContent: "space-between",
+    padding: 15,
+    backgroundColor: "rgba(15, 23, 42, 0.9)",
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     borderTopWidth: 1,
-    borderTopColor: "#333",
+    borderTopColor: "#334155",
   },
   navButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  navButtonGradient: {
+    padding: 12,
     alignItems: "center",
+  },
+  navButtonText: {
+    fontSize: 14,
+    color: "#F8FAFC",
+    marginTop: 4,
+    fontWeight: "500",
   },
 });
 

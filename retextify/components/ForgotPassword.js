@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Alert, View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api/auth';
@@ -34,7 +34,7 @@ const ForgotPassword = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <TextInput
         placeholder="Email"
         value={email}
@@ -50,7 +50,7 @@ const ForgotPassword = ({ navigation }) => {
           {loading ? 'Sending...' : 'Send Reset Link'}
         </Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 

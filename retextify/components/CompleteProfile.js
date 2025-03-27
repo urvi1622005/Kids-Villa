@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert 
+  View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ScrollView 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
@@ -24,38 +24,40 @@ const CompleteProfile = () => {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <Text style={styles.title}>Complete Your Profile</Text>
+      <ScrollView style={styles.container}>
+        <Text style={styles.title}>Complete Your Profile</Text>
 
-      <TextInput 
-        placeholder="Full Name" 
-        placeholderTextColor="#bbb"
-        style={styles.input} 
-        value={name}
-        onChangeText={setName}
-        autoCapitalize="words"
-      />
+        <TextInput 
+          placeholder="Full Name" 
+          placeholderTextColor="#bbb"
+          style={styles.input} 
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+        />
 
-      <TextInput 
-        placeholder="Phone Number" 
-        placeholderTextColor="#bbb"
-        style={styles.input} 
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
-      />
+        <TextInput 
+          placeholder="Phone Number" 
+          placeholderTextColor="#bbb"
+          style={styles.input} 
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
+        />
 
-      <TextInput 
-        placeholder="College / University" 
-        placeholderTextColor="#bbb"
-        style={styles.input} 
-        value={college}
-        onChangeText={setCollege}
-        autoCapitalize="words"
-      />
+        <TextInput 
+          placeholder="College / University" 
+          placeholderTextColor="#bbb"
+          style={styles.input} 
+          value={college}
+          onChangeText={setCollege}
+          autoCapitalize="words"
+        />
 
-      <TouchableOpacity style={styles.button} onPress={handleFinish}>
-        <Text style={styles.buttonText}>Finish</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleFinish}>
+          <Text style={styles.buttonText}>Finish</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };

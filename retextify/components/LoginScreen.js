@@ -81,7 +81,7 @@ try {
     try {
       setLoading(true);
       setError('');
-      const response = await axios.post(`/login`, { email, password });
+      const response = await axios.post(`${API_URL}/login`, { email, password });
       const { data } = response;
       console.log("Login response:", data);
 

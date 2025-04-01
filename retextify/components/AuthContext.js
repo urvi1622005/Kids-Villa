@@ -6,65 +6,52 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // Added loading state
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Check initial authentication state from AsyncStorage on mount
   useEffect(() => {
-    const checkAuthentication = async () => {
+    const loadAuth = async () => {
       try {
-        const storedAuth = await AsyncStorage.getItem("isAuthenticated");
-        const storedUser = await AsyncStorage.getItem("user");
-
-        if (storedAuth === "true" && storedUser) {
-          try {
-            const parsedUser = JSON.parse(storedUser);
-            setIsAuthenticated(true);
-            setUser(parsedUser);
-          } catch (parseError) {
-            console.error("Failed to parse stored user:", parseError);
-            await AsyncStorage.removeItem("user"); // Clean up invalid data
-            setIsAuthenticated(false);
-          }
+        const [auth, userData] = await Promise.all([
+          AsyncStorage.getItem("isAuthenticated"),
+          AsyncStorage.getItem("user"),
+        ]);
+        if (auth === "true" && userData) {
+          setIsAuthenticated(true);
+          setUser(JSON.parse(userData));
         }
       } catch (error) {
-        console.error("Failed to load authentication state:", error);
+        console.error("Load auth failed:", error);
       } finally {
-        setIsLoading(false); // Done loading, whether successful or not
+        setIsLoading(false);
       }
     };
-
-    checkAuthentication();
+    loadAuth();
   }, []);
 
-  // Persist authentication state to AsyncStorage when it changes
   useEffect(() => {
-    const updateStorage = async () => {
+    if (isLoading) return;
+    const saveAuth = async () => {
       try {
-        if (isAuthenticated && user) {
-          await AsyncStorage.setItem("isAuthenticated", "true");
-          await AsyncStorage.setItem("user", JSON.stringify(user));
-        } else {
-          await Promise.all([
-            AsyncStorage.removeItem("isAuthenticated"),
-            AsyncStorage.removeItem("user"),
-          ]);
-        }
+        await Promise.all(
+          isAuthenticated && user
+            ? [
+                AsyncStorage.setItem("isAuthenticated", "true"),
+                AsyncStorage.setItem("user", JSON.stringify(user)),
+              ]
+            : [
+                AsyncStorage.removeItem("isAuthenticated"),
+                AsyncStorage.removeItem("user"),
+              ]
+        );
       } catch (error) {
-        console.error("Failed to update AsyncStorage:", error);
+        console.error("Save auth failed:", error);
       }
     };
-
-    if (!isLoading) {
-      // Only update storage after initial load is complete
-      updateStorage();
-    }
+    saveAuth();
   }, [isAuthenticated, user, isLoading]);
 
   const login = (userData) => {
-    if (!userData) {
-      console.error("Login failed: No user data provided");
-      return;
-    }
+    if (!userData) return console.error("No user data");
     setIsAuthenticated(true);
     setUser(userData);
   };
@@ -73,6 +60,8 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     setUser(null);
   };
+
+  if (isLoading) return null; // Or <Text>Loading...</Text>
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout, isLoading }}>
@@ -83,8 +72,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth requires AuthProvider");
   return context;
 };

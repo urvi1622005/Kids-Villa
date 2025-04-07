@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 
 // Import Screens
@@ -11,11 +11,12 @@ import SignupScreen from "./components/SignupScreen";
 import ForgotPassword from "./components/ForgotPassword";
 import OCRScreen from "./components/OCRScreen";
 import HomeScreen from "./components/HomeScreen";
-import AIChatScreen from "./components/AIChatScreen"; // ✅ AI Chat Screen
+import AIChatScreen from "./components/AIChatScreen";
 import TemplateChooser from "./components/TemplateChooser";
 import DocumentScanner from "./components/DocumentScanner";
 import Settings from "./components/Settings";
-const Stack = createStackNavigator();
+
+const Stack = createNativeStackNavigator();
 
 const MainNavigator = () => {
   const { isAuthenticated } = useAuth(); // Use the context
@@ -37,9 +38,7 @@ const MainNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
-          // Show authentication screens if the user is NOT authenticated
           <>
-            {/* <Stack.Screen name="Login" component={LoginScreen} /> */}
             <Stack.Screen name="SplashScreen" component={SplashScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
@@ -52,7 +51,6 @@ const MainNavigator = () => {
             <Stack.Screen name="Settings" component={Settings} />
           </>
         ) : (
-          // Show app screens if the user is authenticated
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="OCRScreen" component={OCRScreen} />

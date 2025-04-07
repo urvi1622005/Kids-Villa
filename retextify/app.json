@@ -29,6 +29,13 @@
       "eas": {
         "projectId": "4439c5ac-26ba-4be9-9032-9b410b0142f2"
       }
+    },
+    "owner": "urvi1622005",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4439c5ac-26ba-4be9-9032-9b410b0142f2"
     }
   }
 }

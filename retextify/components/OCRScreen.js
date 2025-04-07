@@ -12,16 +12,16 @@ import {
   Dimensions,
   Modal,
   TouchableWithoutFeedback,
-  Keyboard,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import Tesseract from "tesseract.js";
 import { useRoute, useNavigation, useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import * as Clipboard from "expo-clipboard";
 import * as FileSystem from "expo-file-system";
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutRight } from "react-native-reanimated";
+// import AnalyzeText from "./components/AnalyzeText";  // Capital "A" and "T"
+ // Import the analyzeText function
 
 const { width, height } = Dimensions.get("window");
 
@@ -37,6 +37,7 @@ const OCRScreen = () => {
   const [customText, setCustomText] = useState("");
   const [isImageModalVisible, setImageModalVisible] = useState(false);
   const [isSidebarVisible, setSidebarVisible] = useState(false);
+  const [ocrLanguage, setOcrLanguage] = useState("latin"); // Language selection
 
   useEffect(() => {
     if (initialImage) {
@@ -86,13 +87,10 @@ const OCRScreen = () => {
     setCustomText("");
 
     try {
-      // OCR Processing
-      const { data: { text } } = await Tesseract.recognize(imageUri, "eng");
-      setExtractedText(text || "No text detected.");
-      setCustomText(text || "No text detected.");
-
-      // Send to Gemini (assuming you have a function in another file)
-      navigation.navigate("GeminiScreen", { imageUri }); // Adjust based on your implementation
+      // Use the analyzeText function from analyzeText.js
+      const text = await AnalyzeText(imageUri, ocrLanguage);
+      setExtractedText(text);
+      setCustomText(text);
     } catch (error) {
       console.error("Processing Error:", error);
       Alert.alert("Error", "Failed to process image. Please try again.");
@@ -123,6 +121,12 @@ const OCRScreen = () => {
     const fileUri = FileSystem.documentDirectory + "extracted_text.txt";
     await FileSystem.writeAsStringAsync(fileUri, customText);
     Alert.alert("Success", `Text saved to ${fileUri}`);
+  };
+
+  const toggleLanguage = () => {
+    const newLanguage = ocrLanguage === "latin" ? "japanese" : "latin";
+    setOcrLanguage(newLanguage);
+    Alert.alert("Language Changed", `OCR language set to ${newLanguage}`);
   };
 
   return (
@@ -173,14 +177,13 @@ const OCRScreen = () => {
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
-              style={styles.actionButton} 
-              onPress={() => navigation.navigate("DocumentScanner")}
-            >
+_donuts onPress={() => navigation.navigate("DocumentScanner")}>
               <LinearGradient
                 colors={["#3B82F6", "#1E40AF"]}
                 style={styles.buttonGradient}
+
               >
-                <Icon name="document-scanner" size={24} color="#F8FAFC" />
+                <Icon name="document-scanner" size={24} color="#F8FAF" />
                 <Text style={styles.buttonText}>Scan Document</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -311,6 +314,22 @@ const OCRScreen = () => {
                   <Text style={styles.buttonText}>Pick New Image</Text>
                 </>
               )}
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Language Toggle Button */}
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={toggleLanguage}
+          >
+            <LinearGradient
+              colors={["#9333EA", "#7E22CE"]}
+              style={styles.buttonGradient}
+            >
+              <Icon name="language" size={24} color="#F8FAFC" />
+              <Text style={styles.buttonText}>
+                {`Language: ${ocrLanguage === "latin" ? "English" : "Japanese"}`}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
@@ -569,6 +588,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   pickImageButton: {
+    width: "100%",
+    borderRadius: 12,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    marginBottom: 20,
+  },
+  languageButton: {
     width: "100%",
     borderRadius: 12,
     overflow: "hidden",

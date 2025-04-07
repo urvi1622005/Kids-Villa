@@ -10,11 +10,12 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient"; // Added for consistent design
+import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
-import { analyzeText } from "./ocrUtils"; // Function to analyze text using OCR
-import { Ionicons } from "@expo/vector-icons"; // For back button icon
+// import AnalyzeText from "./components/AnalyzeText";  // Capital "A" and "T"
+
+import { Ionicons } from "@expo/vector-icons";
 
 const DocumentScanner = ({ route }) => {
   const [image, setImage] = useState(null);
@@ -47,6 +48,12 @@ const DocumentScanner = ({ route }) => {
 
   // Pick Image from Gallery
   const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission Denied", "Photo library permission is required.");
+      return;
+    }
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -60,9 +67,10 @@ const DocumentScanner = ({ route }) => {
   const handleImageResult = async (result) => {
     if (!result.canceled && result.assets.length > 0) {
       setIsProcessing(true);
-      setImage(result.assets[0].uri);
+      const uri = result.assets[0].uri;
+      setImage(uri);
       try {
-        const text = await analyzeText(result.assets[0].uri);
+        const text = await AnalyzeText(uri); 
         setExtractedText(text);
       } catch (error) {
         Alert.alert("Error", "Failed to extract text. Please try again.");
@@ -70,6 +78,13 @@ const DocumentScanner = ({ route }) => {
         setIsProcessing(false);
       }
     }
+  };
+
+  // Clear Image and Text
+  const clearResult = () => {
+    setImage(null);
+    setExtractedText("");
+    Alert.alert("Cleared", "Image and extracted text have been reset.");
   };
 
   return (
@@ -84,8 +99,13 @@ const DocumentScanner = ({ route }) => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={28} color="#F8FAFC" />
-            <Text style={styles.backButtonText}>Back</Text>
+            <LinearGradient
+              colors={["#3B82F6", "#1E40AF"]}
+              style={styles.backButtonGradient}
+            >
+              <Ionicons name="arrow-back" size={28} color="#F8FAFC" />
+              <Text style={styles.backButtonText}>Back</Text>
+            </LinearGradient>
           </TouchableOpacity>
 
           {/* Title */}
@@ -93,11 +113,21 @@ const DocumentScanner = ({ route }) => {
 
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.actionButton} onPress={pickImage}>
-              <Text style={styles.buttonText}>🖼️ Pick from Gallery</Text>
+            <TouchableOpacity style={styles.actionButton} onPress={pickImage} disabled={isProcessing}>
+              <LinearGradient
+                colors={["#60A5FA", "#2563EB"]}
+                style={styles.buttonGradient}
+              >
+                <Text style={styles.buttonText}>🖼️ Pick from Gallery</Text>
+              </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={openCamera}>
-              <Text style={styles.buttonText}>📷 Scan Document</Text>
+            <TouchableOpacity style={styles.actionButton} onPress={openCamera} disabled={isProcessing}>
+              <LinearGradient
+                colors={["#60A5FA", "#2563EB"]}
+                style={styles.buttonGradient}
+              >
+                <Text style={styles.buttonText}>📷 Scan Document</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
 
@@ -110,22 +140,40 @@ const DocumentScanner = ({ route }) => {
           )}
 
           {/* Image and Navigation Buttons */}
-          {image && (
+          {image && !isProcessing && (
             <View style={styles.resultContainer}>
               <Image source={{ uri: image }} style={styles.image} />
+              <Text style={styles.extractedTextLabel}>Extracted Text:</Text>
+              <Text style={styles.extractedText}>{extractedText || "No text extracted"}</Text>
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => navigation.navigate("EditText", { text: extractedText })}
               >
-                <Text style={styles.buttonText}>✍️ Edit Extracted Text</Text>
+                <LinearGradient
+                  colors={["#10B981", "#047857"]}
+                  style={styles.buttonGradient}
+                >
+                  <Text style={styles.buttonText}>✍️ Edit Extracted Text</Text>
+                </LinearGradient>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionButton}
-                onPress={() =>
-                  navigation.navigate("TemplateChooser", { text: extractedText })
-                }
+                onPress={() => navigation.navigate("TemplateChooser", { text: extractedText })}
               >
-                <Text style={styles.buttonText}>📄 Choose Template</Text>
+                <LinearGradient
+                  colors={["#F59E0B", "#D97706"]}
+                  style={styles.buttonGradient}
+                >
+                  <Text style={styles.buttonText}>📄 Choose Template</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton} onPress={clearResult}>
+                <LinearGradient
+                  colors={["#EF4444", "#B91C1C"]}
+                  style={styles.buttonGradient}
+                >
+                  <Text style={styles.buttonText}>🗑️ Clear</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           )}
@@ -149,11 +197,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backButton: {
+    alignSelf: "flex-start",
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  backButtonGradient: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
     padding: 10,
-    marginBottom: 20,
   },
   backButtonText: {
     color: "#F8FAFC",
@@ -176,17 +228,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   actionButton: {
-    backgroundColor: "#3B82F6",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    width: "90%",
     borderRadius: 12,
     marginVertical: 8,
-    width: "90%",
+    overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 5,
+  },
+  buttonGradient: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    alignItems: "center",
   },
   buttonText: {
     fontSize: 16,
@@ -223,6 +278,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 5,
+  },
+  extractedTextLabel: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#F8FAFC",
+    marginBottom: 10,
+  },
+  extractedText: {
+    fontSize: 16,
+    color: "#E2E8F0",
+    backgroundColor: "rgba(30, 41, 59, 0.8)",
+    padding: 10,
+    borderRadius: 8,
+    width: "90%",
+    textAlign: "center",
+    marginBottom: 20,
   },
 });
 
